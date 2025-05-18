@@ -4,14 +4,15 @@ import { getFirestore } from "firebase/firestore";
 import { sendPasswordResetEmail } from "firebase/auth";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDXquQsYEJ8x0SYJdTqDsWa7QFYfxTtHUU",
-  authDomain: "eco-food-react.firebaseapp.com",
-  projectId: "eco-food-react",
-  storageBucket: "eco-food-react.firebasestorage.app",
-  messagingSenderId: "203790258113",
-  appId: "1:203790258113:web:f6b7dcb9e4c80c511d6940",
-  measurementId: "G-ZSRPBQ3LP5",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
+
 
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
