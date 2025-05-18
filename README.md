@@ -2,33 +2,6 @@
 
 EcoFood Community
 
-## 📁 Estructura del Proyecto
-
-/src
-├─ components/
-│ ├─ auth/
-│ ├─ admin/
-│ ├─ empresa/
-│ └─ cliente/
-├─ pages/
-│ ├─ Login.jsx
-│ ├─ Register.jsx
-│ ├─ Home.jsx
-│ └─ Perfil.jsx
-├─ routes/
-│ ├─ AppRouter.jsx
-│ └─ ProtectedRoute.jsx
-├─ context/
-│ └─ AuthContext.jsx
-├─ services/
-│ ├─ firebase.js
-│ └─ authService.js
-├─ assets/
-├─ App.jsx
-├─ main.jsx
-
----
-
 ## 🚀 Funcionalidades Implementadas
 
 - [x] Registro y login de usuarios con Firebase
