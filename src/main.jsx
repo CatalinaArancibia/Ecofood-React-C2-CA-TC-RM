@@ -1,9 +1,11 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import AppRouter from "./router";
+import AppRouter from "./routes/AppRouter.jsx";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "@fortawesome/fontawesome-free/css/all.min.css";
-import { AuthProvider } from "./context/AuthContext";
+import { AuthProvider } from "./context/AuthContext.jsx";
+
+
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
