@@ -14,8 +14,13 @@ const firebaseConfig = {
 };
 
 
+
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 
-sendPasswordResetEmail(auth, correo)
+export const enviarReset = (email) => {
+  return sendPasswordResetEmail(auth, email);
+};
+
+

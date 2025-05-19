@@ -4,53 +4,130 @@ import {
   signInWithEmailAndPassword,
   setPersistence,
   browserLocalPersistence,
+  sendPasswordResetEmail,
 } from "firebase/auth";
 import { auth } from "../services/firebase";
 import Swal from "sweetalert2";
+import "./Login.css"; // Asegúrate de tener un archivo CSS para los estilos personalizados
+import logo from "../assets/img/logo.png"; // Importa el logo desde la carpeta `src/assets/img`
+
+import "./Login.css";
+
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
+
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      await setPersistence(auth, browserLocalPersistence);
-      await signInWithEmailAndPassword(auth, email, password);
-      Swal.fire("Bienvenido", "Has iniciado sesión correctamente", "success");
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Verificar si el correo está verificado
+      if (!user.emailVerified) {
+        Swal.fire(
+          "Correo no verificado",
+          "Por favor, verifica tu correo antes de iniciar sesión.",
+          "warning"
+        );
+        return;
+      }
+
+      // Redirigir al usuario al home si el correo está verificado
       navigate("/home");
-      // eslint-disable-next-line no-unused-vars
     } catch (error) {
-      Swal.fire("Error", "Credenciales incorrectas o fallo de red", "error");
+      Swal.fire("Error", "No se pudo iniciar sesión. Verifica tus credenciales.", "error");
     }
   };
+
+  const handlePasswordReset = async () => {
+    if (!email) {
+      Swal.fire("Error", "Por favor, ingresa tu correo electrónico", "error");
+      return;
+    }
+
+    try {
+      await sendPasswordResetEmail(auth, email);
+      Swal.fire(
+        "Correo enviado",
+        "Revisa tu bandeja de entrada para restablecer tu contraseña",
+        "success"
+      );
+    } catch (error) {
+      Swal.fire("Error", "No se pudo enviar el correo de recuperación", "error");
+    }
+  };
+
   return (
-    <div className="container mt-5">
-      <h2>Iniciar Sesión</h2>
-      <form onSubmit={handleLogin}>
-        <div className="mb-3">
-          <label className="form-label">Correo Electrónico</label>
-          <input
-            type="email"
-            className="form-control"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
+    <div className="login-container">
+      <div className="d-flex justify-content-center align-items-center vh-100">
+        <div className="card shadow-lg">
+          <h2 className="text-center mb-3" style={{ color: "#96a179", fontWeight: "bold" }}>
+            Inicio de sesión
+          </h2>
+          <div className="text-center mb-5">
+            <img src={logo} alt="Logo EcoFood" className="img-fluid" style={{ width: "100px" }} />
+          </div>
+          <form onSubmit={handleLogin}>
+            <div className="mb-3">
+              <label htmlFor="emailLogin" className="form-label" style={{ color: "#0f0f0f" }}>
+                Usuario:
+              </label>
+              <input
+                type="email"
+                id="emailLogin"
+                name="emailLogin"
+                className="form-control"
+                placeholder="Ingrese su usuario"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+            <div className="mb-3">
+              <label htmlFor="passwordLogin" className="form-label" style={{ color: "#0f0f0f" }}>
+                Contraseña:
+              </label>
+              <input
+                type="password"
+                id="passwordLogin"
+                name="passwordLogin"
+                className="form-control"
+                placeholder="Ingrese su contraseña"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+            <button
+              type="submit"
+              className="btn btn-animate w-100"
+              style={{ backgroundColor: "#96a179", color: "white" }}
+            >
+              Entrar
+            </button>
+          </form>
+          <div className="text-center mt-3">
+            <button
+              type="button"
+              className="btn btn-link"
+              style={{ color: "#96a179", textDecoration: "none" }}
+              onClick={handlePasswordReset}
+            >
+              ¿Olvidaste tu contraseña?
+            </button>
+          </div>
+          <div className="text-center mt-4">
+            <p style={{ fontSize: "0.9rem", color: "#96a179" }}>
+              ¿No tienes una cuenta?{" "}
+              <a href="/Register" style={{ color: "#96a179", textDecoration: "none" }}>
+                Regístrate aquí
+              </a>
+            </p>
+          </div>
         </div>
-        <div className="mb-3">
-          <label className="form-label">Contraseña</label>
-          <input
-            type="password"
-            className="form-control"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
-        <button type="submit" className="btn btn-primary">
-          Iniciar Sesión
-        </button>
-      </form>
+      </div>
     </div>
   );
 }
