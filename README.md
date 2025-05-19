@@ -1,12 +1,54 @@
-# React + Vite
+EcoFood – Proyecto React + Firebase
+IMPORTANTE!!!
+node_modules no esta porque es muy pesado xd pero instalenlo ustedes
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## 🚀 Tecnologías utilizadas
 
-Currently, two official plugins are available:
+- React 18 + Vite
+- Firebase (Authentication + Firestore)
+- React Router DOM
+- SweetAlert2
+- Bootstrap 5
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## Expanding the ESLint configuration
+## ✅ Avance Entregado – Guías 1, 2 y 3 Completadas
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+---
+
+## 📘 Guía 1: Conexión con Firebase
+
+- ✅ Configuración de Firebase en `firebase.js`
+- ✅ Variables sensibles gestionadas en archivo `.env`
+- ✅ `.env` correctamente incluido en `.gitignore`
+- ✅ `firebase.js` usa `import.meta.env` para variables
+- ✅ Firebase conectado sin errores al correr `npm run dev`
+
+---
+
+## 📘 Guía 2: Login y Logout con Firebase
+
+- ✅ Login funcional con `signInWithEmailAndPassword`
+- ✅ SweetAlert2 para retroalimentación en login
+- ✅ Redirección al Home después del login
+- ✅ Logout implementado con `signOut()` y botón `CerrarSesion`
+- ✅ Ruta `/home` protegida con `ProtectedRoute.jsx`
+- ✅ Contexto de sesión creado con `AuthContext`
+- ✅ App envuelta en `<AuthProvider>` dentro de `<BrowserRouter>`
+- ✅ Validación del usuario logueado con `useContext(AuthContext)`
+
+---
+
+## 📘 Guía 3: Registro, Firestore y Verificación
+
+- ✅ Formulario de registro exclusivo para tipo cliente
+- ✅ Campos: nombre, correo, contraseña, dirección, comuna, teléfono
+- ✅ `tipo` de usuario fijo como `"cliente"`
+- ✅ Datos almacenados en `usuarios` de Firestore usando `uid` como ID
+- ✅ Validación de contraseña (mínimo 6 caracteres)
+- ✅ Envío de correo de verificación tras registro
+- ✅ Bloqueo de inicio de sesión hasta verificar correo
+- ✅ Recuperación de contraseña con `sendPasswordResetEmail`
+- ✅ Vista estilizada con Bootstrap y estilo personalizado (`Register.css`)
+
+ 

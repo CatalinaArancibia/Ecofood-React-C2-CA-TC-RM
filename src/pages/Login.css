@@ -1,0 +1,152 @@
+/* Fondo de la página */
+.login-container {
+  overflow-x: hidden; /* Oculta el desbordamiento horizontal */
+  margin: 0; /* Elimina márgenes adicionales */
+  padding: 0; /* Elimina padding adicional */
+  background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)),
+    url(../assets/img/FonditoDifuminado.png) no-repeat center center fixed;
+  background-size: cover;
+  font-family: "Poppins", sans-serif;
+}
+
+/* Estilo de la tarjeta */
+.card {
+  background-color: rgba(248, 245, 233, 0.9); /* Fondo blanco con opacidad */
+  width: 100%; /* Asegura que ocupe todo el ancho disponible */
+  max-width: 500px; /* Ancho máximo */
+  padding: 3rem; /* Relleno interno */
+  border: 1px solid rgba(248, 245, 233, 0.2); /* Borde del card */
+  border-radius: 15px; /* Bordes redondeados */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* Sombra */
+}
+
+/* Estilo del botón */
+.btn-animate {
+  position: relative;
+  overflow: hidden;
+  display: inline-block;
+  padding: 0.75rem 2rem;
+  background-color: #96a179;
+  border: 2px solid #516039;
+  font-weight: bold;
+  text-align: center;
+  color: white;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  z-index: 1; /* Asegura que el botón esté en el nivel correcto */
+  border-radius: 5px;
+}
+
+/* Efecto de relleno en el botón */
+.btn-animate::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background-color: #5a6049;
+  z-index: -1;
+  transition: left 0.3s ease;
+}
+
+/* Animación al pasar el cursor */
+.btn-animate:hover {
+  color: #fff; /* Cambia el color del texto */
+  transform: scale(1.05); /* Aumenta ligeramente el tamaño */
+}
+
+.btn-animate:hover::before {
+  left: 0; /* Rellena el botón desde la izquierda */
+}
+
+/* Asegura que el contenido del botón esté por encima del efecto */
+.btn-animate span {
+  position: relative;
+  z-index: 2; /* Asegura que el texto esté siempre visible */
+}
+
+/* Estilo del texto de error */
+.text-danger {
+  background-color: #fbeaea; /* Rojo muy suave de fondo */
+  color: #a94442; /* Rojo tierra, elegante y legible */
+  border-left: 3px solid #e74c3c; /* Línea visual que lo destaca */
+  padding: 6px 10px;
+  border-radius: 5px;
+  margin-top: 5px;
+  font-size: 14px;
+  font-family: "Arial", sans-serif;
+}
+
+/* Estilo del texto de éxito */
+.text-success {
+  background-color: #eafaf1; /* Verde muy suave de fondo */
+  color: #2e7d32; /* Verde oscuro para el texto */
+  border-left: 3px solid #4caf50; /* Línea visual verde */
+  padding: 6px 10px; /* Espaciado interno */
+  border-radius: 5px; /* Bordes redondeados */
+  margin-top: 5px; /* Separación superior */
+  font-size: 14px; /* Tamaño de fuente */
+  font-family: "Poppins", sans-serif; /* Fuente consistente con el registro */
+  font-weight: 500; /* Peso de fuente medio */
+}
+
+/* Imagen del logo */
+.card img {
+  width: 100px;
+  margin-bottom: 1rem;
+}
+
+/* Estilo del formulario */
+form {
+  margin-top: 1rem;
+}
+
+form .form-label {
+  color: #f3f3f3;
+  font-weight: 500;
+}
+
+form .form-control {
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  padding: 0.5rem;
+  font-size: 1rem;
+}
+
+/* Texto de registro */
+.text-center p {
+  font-size: 0.9rem;
+  color: #96a179;
+}
+
+.text-center p a {
+  color: #96a179;
+  text-decoration: none;
+}
+
+.text-center p a:hover {
+  text-decoration: underline;
+}
+
+/* Fondo de la superposición */
+.overlay-container {
+  position: relative;
+  height: 100vh;
+  width: 100%;
+}
+
+/* Estilo para el botón de recuperación de contraseña */
+.btn-link {
+  font-size: 0.9rem;
+  color: #96a179;
+  text-decoration: none;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.btn-link:hover {
+  text-decoration: underline;
+  color: #5a6049;
+}
