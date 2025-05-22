@@ -19,7 +19,7 @@ export default function CerrarSesion() {
     }
   };
   return (
-    <button onClick={handleLogout} className="btn btn-danger">
+    <button onClick={handleLogout} className="btn cerrar-sesion-btn">
       Cerrar Sesión
     </button>
   );

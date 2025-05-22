@@ -1,0 +1,44 @@
+/* Contenedor principal */
+.not-found-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #fef9ed; /* Fondo claro */
+  color: #5a6049; /* Texto verde oscuro */
+  text-align: center;
+  font-family: "Poppins", sans-serif;
+}
+
+/* Título 404 */
+.not-found-title {
+  font-size: 6rem;
+  font-weight: bold;
+  color: #95a078; /* Verde suave */
+  margin-bottom: 1rem;
+}
+
+/* Mensaje de error */
+.not-found-message {
+  font-size: 1.5rem;
+  margin-bottom: 2rem;
+  color: #5a6049;
+}
+
+/* Botón de volver al inicio */
+.btn-success {
+  border: 1px solid #95a078;
+  background-color: #95a078;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 5px;
+  font-size: 1rem;
+  text-decoration: none;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.btn-success:hover {
+  background-color: #5a6049;
+  color: white;
+}
