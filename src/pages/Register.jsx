@@ -62,6 +62,8 @@ export default function Register() {
               className="form-control"
               value={nombre}
               onChange={(e) => setNombre(e.target.value)}
+              minLength={3} // Mínimo 3 caracteres
+              maxLength={50} // Máximo 50 caracteres
               required
             />
           </div>
@@ -72,6 +74,7 @@ export default function Register() {
               className="form-control"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              maxLength={100} // Máximo 100 caracteres
               required
             />
           </div>
@@ -82,6 +85,8 @@ export default function Register() {
               className="form-control"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              minLength={6} // Mínimo 6 caracteres
+              maxLength={20} // Máximo 20 caracteres
               required
             />
             <small className="text-muted">
@@ -95,6 +100,8 @@ export default function Register() {
               className="form-control"
               value={direccion}
               onChange={(e) => setDireccion(e.target.value)}
+              minLength={5} // Mínimo 5 caracteres
+              maxLength={100} // Máximo 100 caracteres
               required
             />
           </div>
@@ -105,6 +112,8 @@ export default function Register() {
               className="form-control"
               value={comuna}
               onChange={(e) => setComuna(e.target.value)}
+              minLength={3} // Mínimo 3 caracteres
+              maxLength={50} // Máximo 50 caracteres
               required
             />
           </div>
@@ -115,6 +124,8 @@ export default function Register() {
               className="form-control"
               value={telefono}
               onChange={(e) => setTelefono(e.target.value)}
+              minLength={8} // Mínimo 8 caracteres
+              maxLength={15} // Máximo 15 caracteres
             />
           </div>
           <div className="mb-3">
@@ -127,9 +138,13 @@ export default function Register() {
               style={{ backgroundColor: "#e9ecef", cursor: "not-allowed" }}
             />
           </div>
-          <button type="submit" className="btn btn-success">
-            Registrar
-          </button>
+          <button
+              type="submit"
+              className="btn btn-animate w-100"
+              style={{ backgroundColor: "#96a179", color: "white" }}
+            >
+              Registrar
+            </button>
         </form>
         <div className="text-center mt-4">
           <p>

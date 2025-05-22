@@ -54,17 +54,18 @@ button.btn-success:hover {
 
 /* Estilo para el botón de cerrar sesión */
 .cerrar-sesion-btn {
-  border: 1px solid #d9534f; /* Rojo suave */
-  color: #d9534f; /* Texto rojo */
-  padding: 8px 16px;
-  border-radius: 20px;
+  color: #95a078; /* Verde suave */
   font-weight: bold;
-  background-color: transparent;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  font-size: 1rem;
+  padding: 5px 10px;
+  border-radius: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Sombra ligera */
+  display: inline-block;
+  margin-right: 10px;
 }
 
 .cerrar-sesion-btn:hover {
-  background-color: #d9534f; /* Fondo rojo al pasar el cursor */
+  background-color: #5a6049; /* Fondo verde oscuro al pasar el cursor */
   color: white; /* Texto blanco */
 }
 
@@ -292,10 +293,8 @@ footer#contacto ul li {
   color: #95a078; /* Verde suave */
   font-weight: bold;
   font-size: 1rem;
-  background-color: rgba(149, 160, 120, 0.2); /* Fondo semitransparente */
   padding: 5px 10px;
   border-radius: 10px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Sombra ligera */
   display: inline-block;
   margin-right: 10px;
 }

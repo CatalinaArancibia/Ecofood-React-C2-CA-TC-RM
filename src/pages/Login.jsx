@@ -21,7 +21,11 @@ export default function Login() {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
       const user = userCredential.user;
 
       // Verificar si el correo está verificado
@@ -37,7 +41,11 @@ export default function Login() {
       // Redirigir al usuario al home si el correo está verificado
       navigate("/home");
     } catch (error) {
-      Swal.fire("Error", "No se pudo iniciar sesión. Verifica tus credenciales.", "error");
+      Swal.fire(
+        "Error",
+        "No se pudo iniciar sesión. Verifica tus credenciales.",
+        "error"
+      );
     }
   };
 
@@ -55,7 +63,11 @@ export default function Login() {
         "success"
       );
     } catch (error) {
-      Swal.fire("Error", "No se pudo enviar el correo de recuperación", "error");
+      Swal.fire(
+        "Error",
+        "No se pudo enviar el correo de recuperación",
+        "error"
+      );
     }
   };
 
@@ -63,40 +75,41 @@ export default function Login() {
     <div className="login-container">
       <div className="d-flex justify-content-center align-items-center vh-100">
         <div className="card shadow-lg">
-          <h2 className="text-center mb-3" style={{ color: "#96a179", fontWeight: "bold" }}>
+          <h2
+            className="text-center mb-3"
+            style={{ color: "#96a179", fontWeight: "bold" }}
+          >
             Inicio de sesión
           </h2>
           <div className="text-center mb-5">
-            <img src={logo} alt="Logo EcoFood" className="img-fluid" style={{ width: "100px" }} />
+            <img
+              src={logo}
+              alt="Logo EcoFood"
+              className="img-fluid"
+              style={{ width: "100px" }}
+            />
           </div>
           <form onSubmit={handleLogin}>
             <div className="mb-3">
-              <label htmlFor="emailLogin" className="form-label" style={{ color: "#0f0f0f" }}>
-                Usuario:
-              </label>
+              <label className="form-label">Correo</label>
               <input
                 type="email"
-                id="emailLogin"
-                name="emailLogin"
                 className="form-control"
-                placeholder="Ingrese su usuario"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                maxLength={100} // Máximo 100 caracteres
                 required
               />
             </div>
             <div className="mb-3">
-              <label htmlFor="passwordLogin" className="form-label" style={{ color: "#0f0f0f" }}>
-                Contraseña:
-              </label>
+              <label className="form-label">Contraseña</label>
               <input
                 type="password"
-                id="passwordLogin"
-                name="passwordLogin"
                 className="form-control"
-                placeholder="Ingrese su contraseña"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                minLength={6} // Mínimo 6 caracteres
+                maxLength={20} // Máximo 20 caracteres
                 required
               />
             </div>
@@ -121,7 +134,10 @@ export default function Login() {
           <div className="text-center mt-4">
             <p style={{ fontSize: "0.9rem", color: "#96a179" }}>
               ¿No tienes una cuenta?{" "}
-              <a href="/Register" style={{ color: "#96a179", textDecoration: "none" }}>
+              <a
+                href="/Register"
+                style={{ color: "#96a179", textDecoration: "none" }}
+              >
                 Regístrate aquí
               </a>
             </p>
