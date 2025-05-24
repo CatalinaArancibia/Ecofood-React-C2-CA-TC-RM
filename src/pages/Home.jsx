@@ -47,7 +47,7 @@ export default function Home() {
           }}
         >
           <div className="container-fluid">
-            <a className="navbar-brand d-flex align-items-center" href="/">
+            <a className="navbar-brand d-flex align-items-center" href="/home">
               <img src={logo} alt="Logo EcoFood" width="50" height="60" className="me-2" />
               <h1 className="mb-0 fs-4">EcoFood</h1>
             </a>
@@ -139,7 +139,7 @@ export default function Home() {
                 </a>
               </li>
               <li className="nav-item">
-                <a className="nav-link" href="/home">
+                <a className="nav-link" href="/productos">
                   Productos
                 </a>
               </li>
