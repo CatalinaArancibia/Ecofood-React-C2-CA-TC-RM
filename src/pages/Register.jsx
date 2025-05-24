@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
 import { auth } from "../services/firebase";
+import { getFirestore, doc, getDoc } from "firebase/firestore"; // Importa Firestore
 import Swal from "sweetalert2";
 import { useNavigate, Link } from "react-router-dom";
 import { saveUserData } from "../services/userService";
@@ -15,8 +16,32 @@ export default function Register() {
   const [direccion, setDireccion] = useState("");
   const [comuna, setComuna] = useState("");
   const [telefono, setTelefono] = useState("");
+  const [comunas, setComunas] = useState([]); // Estado para almacenar las comunas
   const tipo = "cliente"; // Tipo de usuario fijo como "Cliente"
   const navigate = useNavigate();
+
+  // Firestore instance
+  const db = getFirestore();
+
+  // Función para obtener las comunas desde Firestore
+  useEffect(() => {
+    const fetchComunas = async () => {
+      try {
+        const docRef = doc(db, "config", "comuna"); // Ruta del documento en Firestore
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+          setComunas(docSnap.data().lista); // Asigna las comunas al estado
+        } else {
+          console.error("No se encontró el documento de comunas");
+        }
+      } catch (error) {
+        console.error("Error al obtener las comunas:", error);
+      }
+    };
+
+    fetchComunas();
+  }, [db]);
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -90,7 +115,7 @@ export default function Register() {
               required
             />
             <small className="text-muted">
-            mínimo 6 caracteres, combinando letras y números como recomendación
+              mínimo 6 caracteres, combinando letras y números como recomendación
             </small>
           </div>
           <div className="mb-3">
@@ -107,15 +132,21 @@ export default function Register() {
           </div>
           <div className="mb-3">
             <label className="form-label">Comuna</label>
-            <input
-              type="text"
-              className="form-control"
+            <select
+              className="form-select"
               value={comuna}
               onChange={(e) => setComuna(e.target.value)}
-              minLength={3} // Mínimo 3 caracteres
-              maxLength={50} // Máximo 50 caracteres
               required
-            />
+            >
+              <option value="" disabled>
+                Selecciona tu comuna
+              </option>
+              {comunas.map((comuna, index) => (
+                <option key={index} value={comuna}>
+                  {comuna}
+                </option>
+              ))}
+            </select>
           </div>
           <div className="mb-3">
             <label className="form-label">Teléfono (opcional)</label>
@@ -126,25 +157,17 @@ export default function Register() {
               onChange={(e) => setTelefono(e.target.value)}
               minLength={8} // Mínimo 8 caracteres
               maxLength={15} // Máximo 15 caracteres
-            />
-          </div>
-          <div className="mb-3">
-            <label className="form-label">Tipo de usuario</label>
-            <input
-              type="text"
-              className="form-control"
-              value={tipo}
-              readOnly
-              style={{ backgroundColor: "#e9ecef", cursor: "not-allowed" }}
+              pattern="[0-9]+" // Solo permite números
+              title="Por favor, ingresa solo números" // Mensaje de validación
             />
           </div>
           <button
-              type="submit"
-              className="btn btn-animate w-100"
-              style={{ backgroundColor: "#96a179", color: "white" }}
-            >
-              Registrar
-            </button>
+            type="submit"
+            className="btn btn-animate w-100"
+            style={{ backgroundColor: "#96a179", color: "white" }}
+          >
+            Registrar
+          </button>
         </form>
         <div className="text-center mt-4">
           <p>
