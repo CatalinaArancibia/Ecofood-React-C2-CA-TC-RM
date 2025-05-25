@@ -1,11 +1,14 @@
-import { Outlet } from "react-router-dom";
+import React from "react";
 import NavAdmin from "./NavAdmin";
-import "../../../pages/admin/AdminStyles.css";
+import { Outlet } from "react-router-dom";
+import "../../../pages/admin/AdminLayout.css";
 
 export default function AdminLayout() {
   return (
-    <div className="admin-panel">
-      <NavAdmin />
+    <div className="admin-layout">
+      <aside className="sidebar">
+        <NavAdmin />
+      </aside>
       <main className="main-content">
         <Outlet />
       </main>

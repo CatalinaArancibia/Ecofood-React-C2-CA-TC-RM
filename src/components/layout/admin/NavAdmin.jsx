@@ -1,23 +1,46 @@
-import { NavLink, useNavigate } from "react-router-dom";
-import { logout } from "../../services/authFirebase";
+import { NavLink } from "react-router-dom";
+import "../../../pages/admin/NavAdmin.css"; // La ruta correcta según tu estructura
 
 export default function NavAdmin() {
-  const navigate = useNavigate();
-
-  const handleLogout = async () => {
-    await logout();
-    navigate("/login");
-  };
-
   return (
     <nav className="nav-admin">
-      <ul>
-        <li><NavLink to="/admin" end>Dashboard</NavLink></li>
-        <li><NavLink to="/admin/empresas">Empresas</NavLink></li>
-        <li><NavLink to="/admin/clientes">Clientes</NavLink></li>
-        <li><NavLink to="/admin/administradores">Administradores</NavLink></li>
-        <li><button onClick={handleLogout}>Cerrar sesión</button></li>
-      </ul>
+      <h2 className="nav-admin-title">Admin Panel</h2>
+
+      <NavLink
+        to="/admin/dashboard"
+        className={({ isActive }) =>
+          isActive ? "nav-admin-link active" : "nav-admin-link"
+        }
+      >
+        Dashboard
+      </NavLink>
+
+      <NavLink
+        to="/admin/empresas"
+        className={({ isActive }) =>
+          isActive ? "nav-admin-link active" : "nav-admin-link"
+        }
+      >
+        Empresas
+      </NavLink>
+
+      <NavLink
+        to="/admin/clientes"
+        className={({ isActive }) =>
+          isActive ? "nav-admin-link active" : "nav-admin-link"
+        }
+      >
+        Clientes
+      </NavLink>
+
+      <NavLink
+        to="/admin/administradores"
+        className={({ isActive }) =>
+          isActive ? "nav-admin-link active" : "nav-admin-link"
+        }
+      >
+        Administradores
+      </NavLink>
     </nav>
   );
 }
