@@ -1,0 +1,140 @@
+/* Contenedor principal */
+.admins-container {
+  max-width: 900px;
+  margin: 0 auto; /* centrado horizontal */
+  padding: 1rem;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #333;
+}
+
+/* Título */
+.admins-container h2 {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  color: #4a6f28;
+  font-size: 2rem;
+}
+
+/* Input de búsqueda */
+.busqueda-input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+  border: 2px solid #96a179;
+  border-radius: 4px;
+  transition: border-color 0.3s ease;
+}
+
+.busqueda-input:focus {
+  outline: none;
+  border-color: #4a6f28;
+  box-shadow: 0 0 5px #4a6f28;
+}
+
+/* Formulario de admin */
+.admin-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+}
+
+.admin-form input,
+.admin-form select {
+  flex: 1 1 45%;
+  padding: 0.5rem;
+  border: 2px solid #96a179;
+  border-radius: 4px;
+  font-size: 1rem;
+  transition: border-color 0.3s ease;
+}
+
+.admin-form input:focus,
+.admin-form select:focus {
+  outline: none;
+  border-color: #4a6f28;
+  box-shadow: 0 0 5px #4a6f28;
+}
+
+/* Botones del formulario */
+.admin-form button {
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  background-color: #4a6f28;
+  color: white;
+  transition: background-color 0.3s ease;
+  margin-top: 0.5rem;
+}
+
+.admin-form button:hover {
+  background-color: #3b5a1f;
+}
+
+.admin-form .cancel-btn {
+  background-color: #a33a3a;
+  margin-left: 0.5rem;
+}
+
+.admin-form .cancel-btn:hover {
+  background-color: #7a2a2a;
+}
+
+/* Mensaje de error */
+.error-message {
+  color: #a33a3a;
+  text-align: center;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+/* Tabla de administradores */
+.admins-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.admins-table thead {
+  background-color: #4a6f28;
+  color: white;
+}
+
+.admins-table th,
+.admins-table td {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #96a179;
+  text-align: left;
+}
+
+.admins-table tbody tr:nth-child(even) {
+  background-color: #f4f7e8;
+}
+
+/* Botones en la tabla */
+.admins-table button {
+  background-color: #4a6f28;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  padding: 0.25rem 0.5rem;
+  margin-right: 0.4rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background-color 0.3s ease;
+}
+
+.admins-table button:hover {
+  background-color: #3b5a1f;
+}
+
+.admins-table button:last-child {
+  background-color: #a33a3a;
+}
+
+.admins-table button:last-child:hover {
+  background-color: #7a2a2a;
+}

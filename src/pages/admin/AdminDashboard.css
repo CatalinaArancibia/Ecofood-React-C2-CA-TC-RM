@@ -1,0 +1,29 @@
+.admin-dashboard {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.dashboard-cards {
+  display: flex;
+  gap: 1.5rem;
+  margin-top: 2rem;
+  flex-wrap: wrap;
+}
+
+.card {
+  flex: 1 1 250px;
+  background-color: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  transition: transform 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+}
+
+.card h3 {
+  margin-top: 0;
+  color: #96a179;
+}

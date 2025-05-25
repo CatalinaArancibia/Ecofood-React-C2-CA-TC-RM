@@ -1,0 +1,42 @@
+.nav-admin {
+  width: 250px;
+  height: 100vh;
+  position: fixed;
+  background-color: #96a179;
+  padding: 2rem 1rem;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+  z-index: 1000;
+}
+
+.main-content {
+  margin-left: 250px; /* dejar espacio al menú lateral */
+  padding: 2rem;
+  box-sizing: border-box;
+  min-height: 100vh;
+  background-color: #f9f9f9;
+  overflow-y: auto;
+  position: relative;
+}
+
+@media (max-width: 720px) {
+  .nav-admin {
+    position: relative;
+    width: 100%;
+    height: auto;
+    padding: 1rem;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    gap: 1rem;
+  }
+
+  .main-content {
+    margin-left: 0;
+    padding: 1rem;
+  }
+}

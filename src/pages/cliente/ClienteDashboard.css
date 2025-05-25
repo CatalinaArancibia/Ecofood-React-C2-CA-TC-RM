@@ -1,0 +1,60 @@
+.cliente-dashboard {
+  padding: 2rem;
+  font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  max-width: 900px;
+  margin: 0 auto;
+  color: #34495e;
+}
+
+.cliente-dashboard h1 {
+  font-weight: 600;
+  font-size: 2.4rem;
+  color: #5a6049; /* Verde más oscuro EcoFood */
+  margin-bottom: 1.2rem;
+  letter-spacing: 0.04em;
+}
+
+.welcome-msg {
+  font-size: 1.1rem;
+  margin-bottom: 2rem;
+  font-weight: 400;
+  color: #666;
+}
+
+.order-summary {
+  background-color: #f4f7e7;
+  padding: 1.8rem 2.2rem;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.07);
+}
+
+.order-summary h2 {
+  color: #5a6049;
+  margin-bottom: 1rem;
+  font-weight: 600;
+  font-size: 1.6rem;
+}
+
+.order-summary p {
+  color: #555;
+  font-size: 1rem;
+  line-height: 1.4;
+}
+
+/* Botón estilo EcoFood */
+.btn-eco {
+  background-color: #97a278;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-top: 1.5rem;
+  transition: background-color 0.3s ease;
+}
+
+.btn-eco:hover {
+  background-color: #5a6049;
+}
