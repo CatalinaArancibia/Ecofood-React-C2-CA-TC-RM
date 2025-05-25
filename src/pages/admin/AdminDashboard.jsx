@@ -1,5 +1,5 @@
 import React from "react";
-import "./AdminDashboard.css";  // Importa los estilos específicos
+import "./AdminDashboard.css"; // Estilos específicos del dashboard
 
 export default function AdminDashboard() {
   return (
@@ -24,4 +24,3 @@ export default function AdminDashboard() {
     </div>
   );
 }
-
