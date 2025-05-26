@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from "react-router-dom";
+
 import Login from "../pages/Login";
 import Register from "../pages/Register";
 import Home from "../pages/Home";
@@ -8,6 +9,7 @@ import AdminDashboard from "../pages/admin/AdminDashboard";
 import AdminLayout from "../components/layout/admin/AdminLayout";
 import Empresas from "../pages/admin/Empresas";
 import Clientes from "../pages/admin/Clientes";
+import Productos from "../pages/admin/Productos";
 import Administradores from "../pages/admin/Administradores";
 
 import ClienteDashboard from "../pages/cliente/ClienteDashboard";
@@ -20,11 +22,21 @@ export default function AppRouter() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
 
-      {/* Rutas protegidas para administradores */}
+      {/* Ruta accesible para cualquier usuario autenticado */}
+      <Route
+        path="/home"
+        element={
+          <ProtectedRoute requiredRole="any">
+            <Home />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Rutas protegidas solo para administradores */}
       <Route
         path="/admin/*"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute requiredRole="admin">
             <AdminLayout />
           </ProtectedRoute>
         }
@@ -32,29 +44,22 @@ export default function AppRouter() {
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<AdminDashboard />} />
         <Route path="empresas" element={<Empresas />} />
+        <Route path="productos" element={<Productos />} />
         <Route path="clientes" element={<Clientes />} />
         <Route path="administradores" element={<Administradores />} />
       </Route>
 
-      {/* Rutas cliente */}
+      {/* Ruta protegida solo para clientes */}
       <Route
         path="/cliente/dashboard"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute requiredRole="client">
             <ClienteDashboard />
           </ProtectedRoute>
         }
       />
 
-      <Route
-        path="/home"
-        element={
-          <ProtectedRoute>
-            <Home />
-          </ProtectedRoute>
-        }
-      />
-
+      {/* Ruta para páginas no encontradas */}
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
