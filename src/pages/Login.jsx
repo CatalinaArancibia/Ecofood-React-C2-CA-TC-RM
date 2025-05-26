@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   signInWithEmailAndPassword,
@@ -8,15 +8,30 @@ import {
 } from "firebase/auth";
 import { auth } from "../services/firebase";
 import Swal from "sweetalert2";
-import "./Login.css"; // Asegúrate de tener un archivo CSS para los estilos personalizados
-import logo from "../assets/img/logo.png"; // Importa el logo desde la carpeta `src/assets/img`
+import { useAuth } from "../context/AuthContext"; // Importa el hook de contexto
 
 import "./Login.css";
+import logo from "../assets/img/logo.png";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
+  const { user } = useAuth(); // Obtén el usuario actual
+
+  // REDIRECCIONAR SI YA ESTÁ LOGUEADO
+  useEffect(() => {
+    if (user) {
+      const tipo = user?.tipo || user?.userType; 
+      if (tipo === "admin") {
+        navigate("/admin/dashboard", { replace: true });
+      } else if (tipo === "client") {
+        navigate("/cliente/dashboard", { replace: true });
+      } else {
+        navigate("/home", { replace: true });
+      }
+    }
+  }, [user, navigate]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -26,10 +41,9 @@ export default function Login() {
         email,
         password
       );
-      const user = userCredential.user;
+      const loggedUser = userCredential.user;
 
-      // Verificar si el correo está verificado
-      if (!user.emailVerified) {
+      if (!loggedUser.emailVerified) {
         Swal.fire(
           "Correo no verificado",
           "Por favor, verifica tu correo antes de iniciar sesión.",
@@ -38,8 +52,7 @@ export default function Login() {
         return;
       }
 
-      // Redirigir al usuario al home si el correo está verificado
-      navigate("/home");
+      // Esperar a que el contexto Auth se actualice automáticamente, no navegues aquí
     } catch (error) {
       Swal.fire(
         "Error",
@@ -54,7 +67,6 @@ export default function Login() {
       Swal.fire("Error", "Por favor, ingresa tu correo electrónico", "error");
       return;
     }
-
     try {
       await sendPasswordResetEmail(auth, email);
       Swal.fire(
@@ -97,7 +109,7 @@ export default function Login() {
                 className="form-control"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                maxLength={100} // Máximo 100 caracteres
+                maxLength={100}
                 required
               />
             </div>
@@ -108,8 +120,8 @@ export default function Login() {
                 className="form-control"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                minLength={6} // Mínimo 6 caracteres
-                maxLength={20} // Máximo 20 caracteres
+                minLength={6}
+                maxLength={20}
                 required
               />
             </div>
