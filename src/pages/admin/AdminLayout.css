@@ -1,6 +1,6 @@
 .admin-container {
   max-width: 900px;
-  margin: 0 auto; /* centrado horizontal */
+  margin: 0 auto; 
   padding: 1rem;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   color: #333;
@@ -9,7 +9,7 @@
 .admin-container h2 {
   text-align: center;
   margin-bottom: 1.5rem;
-  color: #4a6f28;
+  color: #5a6049;
   font-size: 2rem;
 }
 
