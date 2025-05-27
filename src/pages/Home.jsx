@@ -20,6 +20,7 @@ export default function Home() {
 
 
 
+
   const [datos, setDatos] = useState({ nombre: "", tipo: "" });
   const navigate = useNavigate();
 
