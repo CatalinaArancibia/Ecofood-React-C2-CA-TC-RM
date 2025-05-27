@@ -4,6 +4,7 @@ import { getUserData } from "../services/userService";
 import CerrarSesion from "../components/CerrarSesion";
 import { useNavigate } from "react-router-dom";
 
+
 import "./Home.css";
 
 // Importar imágenes
@@ -13,8 +14,12 @@ import educamos from "../assets/img/educamos.jpg";
 import conectamos from "../assets/img/conectamos.jpg";
 import comidafuturista from "../assets/img/comidafuturista.jpg";
 
+
 export default function Home() {
   const { user } = useContext(AuthContext);
+
+
+
   const [datos, setDatos] = useState({ nombre: "", tipo: "" });
   const navigate = useNavigate();
 
@@ -31,8 +36,10 @@ export default function Home() {
     fetchUserData();
   }, [user]);
 
+
   const redirigirRegistro = () => navigate("/register");
   const redirigirLogin = () => navigate("/login");
+
 
   return (
     <div>
@@ -48,7 +55,9 @@ export default function Home() {
         >
           <div className="container-fluid">
             <a className="navbar-brand d-flex align-items-center" href="/home">
+
               <img src={logo} alt="Logo EcoFood" width="50" height="60" className="me-2" />
+
               <h1 className="mb-0 fs-4">EcoFood</h1>
             </a>
             <button
@@ -69,6 +78,7 @@ export default function Home() {
               <div className="d-flex flex-lg-row flex-column align-items-lg-center align-items-end gap-2 mt-2 mt-lg-0">
                 {user && (
                   <>
+
                     <span className="user-greeting">
                       Hola, {datos.nombre}
                     </span>
@@ -91,6 +101,7 @@ export default function Home() {
                     </button>
                   </>
                 )}
+
               </div>
             </div>
           </div>
@@ -158,18 +169,21 @@ export default function Home() {
         <section id="quienes-somos" className="mb-5">
           <h2>¿Quiénes Somos?</h2>
           <p>
+
             EcoFood es una organización comprometida con la reducción del desperdicio alimentario mediante iniciativas
             educativas, tecnológicas y prácticas cotidianas. Somos un equipo diverso formado por expertos en medio
             ambiente, tecnología y desarrollo comunitario, unidos por un propósito común: generar conciencia, educar y
             activar soluciones para enfrentar este desafío global.
           </p>
           <img src={quienesSomos} alt="Imagen representativa" className="img-fluid rounded img-ajustada" />
+
         </section>
 
         <section id="que-hacemos" className="mb-5">
           <h2>¿Qué Hacemos?</h2>
           <div className="row g-3">
             <div className="col-md-4">
+
               <img src={educamos} className="img-fluid rounded img-quehacemos" alt="Educamos" />
               <h3 className="h5 mt-2">Educamos</h3>
               <p>

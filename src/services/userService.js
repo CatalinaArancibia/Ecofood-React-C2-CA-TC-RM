@@ -1,6 +1,7 @@
 import { getFirestore, doc, setDoc, getDoc } from "firebase/firestore";
 import { db } from "./firebase"; // 👈 usamos db directamente, sin app
 
+
 /**
  * Obtiene los datos del usuario desde Firestore
  * @param {string} uid - ID del usuario (auth.uid)

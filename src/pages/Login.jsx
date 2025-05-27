@@ -1,5 +1,7 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+
 import {
   signInWithEmailAndPassword,
   setPersistence,
@@ -8,19 +10,24 @@ import {
 } from "firebase/auth";
 import { auth } from "../services/firebase";
 import Swal from "sweetalert2";
+
 import "./Login.css"; // Asegúrate de tener un archivo CSS para los estilos personalizados
 import logo from "../assets/img/logo.png"; // Importa el logo desde la carpeta `src/assets/img`
 
 import "./Login.css";
+
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
+
+
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
+
       const userCredential = await signInWithEmailAndPassword(
         auth,
         email,
@@ -52,10 +59,12 @@ export default function Login() {
   const handlePasswordReset = async () => {
     if (!email) {
       Swal.fire("Error", "Por favor, ingresa tu correo electrónico", "error");
+
       return;
     }
 
     try {
+
       await sendPasswordResetEmail(auth, email);
       Swal.fire(
         "Correo enviado",
@@ -68,6 +77,7 @@ export default function Login() {
         "No se pudo enviar el correo de recuperación",
         "error"
       );
+
     }
   };
 
@@ -122,6 +132,7 @@ export default function Login() {
             </button>
           </form>
           <div className="text-center mt-3">
+
             <button
               type="button"
               className="btn btn-link"
@@ -130,6 +141,7 @@ export default function Login() {
             >
               ¿Olvidaste tu contraseña?
             </button>
+
           </div>
           <div className="text-center mt-4">
             <p style={{ fontSize: "0.9rem", color: "#96a179" }}>

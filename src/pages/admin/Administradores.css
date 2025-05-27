@@ -1,0 +1,424 @@
+/* Estilos generales */
+.admins-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Barra de búsqueda */
+.busqueda-admin-input {
+  width: 100%;
+  padding: 0.75rem;
+  margin-bottom: 1.5rem;
+  font-size: 1rem;
+  border: 2px solid #bdc3c7;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+}
+
+.busqueda-admin-input:focus {
+  outline: none;
+  border-color: #5a6049;
+  box-shadow: 0 0 0 3px rgba(90, 96, 73, 0.2);
+}
+
+/* Sección de promoción de usuarios */
+.promote-section {
+  margin-bottom: 2rem;
+}
+
+.btn-toggle-users {
+  background-color: #5a6049;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.3s;
+}
+
+.btn-toggle-users:hover {
+  background-color: #3b3d37;
+}
+
+.btn-toggle-users:disabled {
+  background-color: #95a5a6;
+  cursor: not-allowed;
+}
+
+.promote-users-container {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  margin-top: 1rem;
+}
+
+.no-users {
+  text-align: center;
+  padding: 1rem;
+  color: #666;
+}
+
+/* Tabla de usuarios */
+.users-table-container {
+  max-height: 400px;
+  overflow-y: auto;
+  margin-top: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.users-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.users-table th {
+  background-color: #5a6049;
+  color: white;
+  padding: 12px 15px;
+  text-align: left;
+  position: sticky;
+  top: 0;
+}
+
+.users-table td {
+  padding: 12px 15px;
+  border-bottom: 1px solid #eee;
+}
+
+.user-row:hover {
+  background-color: #f5f5f5;
+}
+
+/* Botón Promover */
+.btn-promote {
+  background-color:#5a6049;
+  color: white;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s;
+  white-space: nowrap;
+}
+
+.btn-promote:hover {
+  background-color:#363831;
+}
+
+.btn-promote:disabled {
+  background-color: #95a5a6;
+  cursor: not-allowed;
+}
+
+/* Formulario */
+.admin-form {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  margin-bottom: 2rem;
+}
+
+.form-row {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.form-group {
+  flex: 1;
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+/* Tabla de administradores */
+.table-responsive {
+  overflow-x: auto;
+}
+
+.admins-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.admins-table th,
+.admins-table td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+.admins-table th {
+  background-color: #5a6049;
+  color: white;
+}
+
+.actions-cell {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* Botones generales */
+.btn-submit {
+  background-color: #5a6049;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-submit:hover {
+  background-color: #3d4232;
+}
+
+.btn-submit:disabled {
+  background-color: #95a5a6;
+  cursor: not-allowed;
+}
+
+.btn-cancel {
+  background-color: #e74c3c;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-cancel:hover {
+  background-color: #c0392b;
+}
+
+.btn-editar {
+  background-color:#5a6049;
+  color: white;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-editar:hover {
+  background-color:#5a6049;
+}
+
+.btn-editar:disabled {
+  background-color: #95a5a6;
+  cursor: not-allowed;
+}
+
+.btn-eliminar {
+  background-color: #e74c3c;
+  color: white;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-eliminar:hover {
+  background-color: #c0392b;
+}
+
+.btn-eliminar.disabled,
+.btn-eliminar:disabled {
+  background-color: #95a5a6;
+  cursor: not-allowed;
+}
+
+/* Alertas */
+.alert {
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  border-radius: 4px;
+}
+
+.alert-danger {
+  background-color: #fdecea;
+  color: #d32f2f;
+  border: 1px solid #f5c6cb;
+}
+
+.alert-success {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+/* Loading */
+.loading-indicator {
+  padding: 1rem;
+  text-align: center;
+  color: #5a6049;
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(2px);
+}
+
+.modal-content {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  animation: modalFadeIn 0.3s ease-out;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-content h3 {
+  margin-top: 0;
+  color: #feffff;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.modal-content .form-group {
+  margin-bottom: 1.5rem;
+}
+
+.modal-content .form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.modal-content .form-group input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+  transition: border-color 0.3s;
+}
+
+.modal-content .form-group input:focus {
+  outline: none;
+  border-color: #000000;
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+}
+
+/* Scrollbar */
+.users-table-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.users-table-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.users-table-container::-webkit-scrollbar-thumb {
+  background: #5a6049;
+  border-radius: 4px;
+}
+
+.users-table-container::-webkit-scrollbar-thumb:hover {
+  background: #5a6049;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .admins-container {
+    padding: 1rem;
+  }
+  
+  .form-row {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .users-table,
+  .admins-table {
+    display: block;
+    overflow-x: auto;
+  }
+  
+  .users-table th, 
+  .users-table td,
+  .admins-table th,
+  .admins-table td {
+    padding: 8px 10px;
+  }
+  
+  .actions-cell {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .btn-promote,
+  .btn-editar,
+  .btn-eliminar {
+    width: 100%;
+  }
+
+  .modal-content {
+    padding: 1.5rem;
+    width: 95%;
+  }
+  
+  .modal-actions {
+    flex-direction: column;
+  }
+  
+  .modal-actions button {
+    width: 100%;
+  }
+}
