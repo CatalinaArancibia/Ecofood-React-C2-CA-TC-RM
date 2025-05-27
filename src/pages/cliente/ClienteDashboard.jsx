@@ -25,7 +25,7 @@ export default function ClienteDashboard() {
           onClick={() => navigate("/home")}
           className="btn-eco mt-3"
         >
-          Ir al sitio público
+          Visitar pagina WEB
         </button>
       </section>
       

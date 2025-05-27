@@ -1,6 +1,6 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { getUserData } from "../services/userService";
 
 import {
   signInWithEmailAndPassword,
@@ -16,26 +16,21 @@ import logo from "../assets/img/logo.png"; // Importa el logo desde la carpeta `
 
 import "./Login.css";
 
-
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
-
-
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-
       const userCredential = await signInWithEmailAndPassword(
         auth,
-        email,
+        email.trim().toLowerCase(),
         password
       );
       const user = userCredential.user;
 
-      // Verificar si el correo está verificado
       if (!user.emailVerified) {
         Swal.fire(
           "Correo no verificado",
@@ -45,9 +40,18 @@ export default function Login() {
         return;
       }
 
-      // Redirigir al usuario al home si el correo está verificado
-      navigate("/home");
+      // Obtener tipo de usuario desde Firestore
+      const datos = await getUserData(user.uid);
+
+      if (datos.tipo === "admin") {
+        navigate("/admin/dashboard");
+      } else if (datos.tipo === "cliente") {
+        navigate("/cliente/dashboard");
+      } else {
+        navigate("/home"); // en caso de que no tenga tipo definido
+      }
     } catch (error) {
+      console.error("Error al iniciar sesión:", error);
       Swal.fire(
         "Error",
         "No se pudo iniciar sesión. Verifica tus credenciales.",
@@ -64,7 +68,6 @@ export default function Login() {
     }
 
     try {
-
       await sendPasswordResetEmail(auth, email);
       Swal.fire(
         "Correo enviado",
@@ -77,7 +80,6 @@ export default function Login() {
         "No se pudo enviar el correo de recuperación",
         "error"
       );
-
     }
   };
 
@@ -132,7 +134,6 @@ export default function Login() {
             </button>
           </form>
           <div className="text-center mt-3">
-
             <button
               type="button"
               className="btn btn-link"
@@ -141,7 +142,6 @@ export default function Login() {
             >
               ¿Olvidaste tu contraseña?
             </button>
-
           </div>
           <div className="text-center mt-4">
             <p style={{ fontSize: "0.9rem", color: "#96a179" }}>
