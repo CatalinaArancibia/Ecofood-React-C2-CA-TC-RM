@@ -8,12 +8,15 @@ import ClienteDashboard from "../pages/cliente/ClienteDashboard";
 import AdminDashboard from "../pages/admin/AdminDashboard";
 import AdminLayout from "../components/layout/admin/AdminLayout";
 import NotFound from "../pages/NotFound";
+import PerfilEmpresa from "../pages/empresa/PerfilEmpresa";
+import ProductosEmpresa from "../pages/empresa/ProductosEmpresa";
 
 
 import Empresas from "../pages/admin/Empresas";
 import Clientes from "../pages/admin/Clientes";
 import Productos from "../pages/admin/Productos";
 import Administradores from "../pages/admin/Administradores";
+
 
 export default function AppRouter() {
   return (
@@ -55,6 +58,25 @@ export default function AppRouter() {
           </ProtectedRoute>
         }
       />
+
+      <Route
+        path="/empresa/perfil"
+        element={
+          <ProtectedRoute requiredRole="empresa">
+            <PerfilEmpresa />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/empresa/productos"
+        element={
+          <ProtectedRoute requiredRole="empresa">
+            <ProductosEmpresa />
+          </ProtectedRoute>
+        }
+      />
+
 
       <Route path="*" element={<NotFound />} />
     </Routes>

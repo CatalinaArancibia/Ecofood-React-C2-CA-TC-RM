@@ -47,9 +47,12 @@ export default function Login() {
         navigate("/admin/dashboard");
       } else if (datos.tipo === "cliente") {
         navigate("/cliente/dashboard");
+      } else if (datos.tipo === "empresa") {
+        navigate("/empresa/perfil");
       } else {
-        navigate("/home"); // en caso de que no tenga tipo definido
+        navigate("/home"); // si no tiene tipo definido
       }
+
     } catch (error) {
       console.error("Error al iniciar sesión:", error);
       Swal.fire(
