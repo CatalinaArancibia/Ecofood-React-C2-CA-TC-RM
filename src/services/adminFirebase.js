@@ -1,15 +1,16 @@
 import { db } from "./firebase";
-import {
-  collection,
-  getDocs,
-  addDoc,
-  updateDoc,
-  deleteDoc,
-  doc,
-  query,
-  where,
-  getDoc,
+import { 
+  collection, 
+  getDocs, 
+  addDoc, 
+  updateDoc, 
+  deleteDoc, 
+  doc, 
+  query, 
+  where, 
+  getDoc 
 } from "firebase/firestore";
+import { getAuth } from "firebase/auth";
 
 // Función auxiliar para verificar si existe un admin principal
 const existeAdminPrincipal = async (excludeId = null) => {
@@ -20,13 +21,11 @@ const existeAdminPrincipal = async (excludeId = null) => {
   );
 
   const snapshot = await getDocs(q);
-
+  
   if (excludeId) {
-    return snapshot.docs.some(
-      (doc) => doc.id !== excludeId && doc.data().tipoAdmin === "principal"
-    );
+    return snapshot.docs.some(doc => doc.id !== excludeId && doc.data().tipoAdmin === "principal");
   }
-
+  
   return !snapshot.empty;
 };
 
@@ -34,14 +33,17 @@ const existeAdminPrincipal = async (excludeId = null) => {
 export const getAdmins = async () => {
   const q = query(collection(db, "usuarios"), where("tipo", "==", "admin"));
   const snapshot = await getDocs(q);
-  return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 };
 
-// Obtener usuarios no administradores
+// Obtener usuarios promovibles (clientes y otros admins)
 export const getNonAdminUsers = async () => {
-  const q = query(collection(db, "usuarios"), where("tipo", "!=", "admin"));
+  const q = query(
+    collection(db, "usuarios"),
+    where("tipo", "in", ["cliente", "admin"])
+  );
   const snapshot = await getDocs(q);
-  return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 };
 
 // Crear nuevo administrador
@@ -60,12 +62,12 @@ export const addAdmin = async (adminData) => {
       throw new Error("Ya existe un administrador principal");
     }
   }
-
+  
   try {
     const docRef = await addDoc(collection(db, "usuarios"), {
       ...adminData,
       tipo: "admin",
-      createdAt: new Date(),
+      createdAt: new Date()
     });
     return docRef.id;
   } catch (error) {
@@ -77,20 +79,27 @@ export const addAdmin = async (adminData) => {
 // Promover usuario existente a administrador
 export const promoteUserToAdmin = async (userId, adminData) => {
   const userRef = doc(db, "usuarios", userId);
-
+  
   try {
-    // Primero verificamos que el usuario exista
+    // Verificar que el usuario exista y sea promovible
     const userDoc = await getDoc(userRef);
     if (!userDoc.exists()) {
       throw new Error("Usuario no encontrado");
     }
 
-    // Actualizamos el documento existente
+    const userData = userDoc.data();
+    
+    // Solo permitir promover clientes y otros admins
+    if (!["cliente", "admin"].includes(userData.tipo)) {
+      throw new Error("Solo se pueden promover clientes y administradores");
+    }
+
+    // Actualizar el documento
     await updateDoc(userRef, {
       ...adminData,
-      tipo: "admin", // Esto cambia el tipo a administrador
-      tipoAdmin: "secundario", // Asignamos el tipo de admin
-      promotedAt: new Date(), // Marcamos la fecha de promoción
+      tipo: "admin",
+      tipoAdmin: adminData.tipoAdmin || "secundario",
+      promotedAt: new Date()
     });
 
     return userId;
@@ -115,18 +124,13 @@ export const updateAdmin = async (id, adminData, currentUserId) => {
     if (adminData.tipoAdmin !== "principal") {
       throw new Error("No se puede quitar el rol de administrador principal");
     }
-
+    
     if (id !== currentUserId) {
-      throw new Error(
-        "Solo el administrador principal puede editar su propia cuenta"
-      );
+      throw new Error("Solo el administrador principal puede editar su propia cuenta");
     }
   }
 
-  if (
-    adminData.tipoAdmin === "principal" &&
-    adminActual.tipoAdmin !== "principal"
-  ) {
+  if (adminData.tipoAdmin === "principal" && adminActual.tipoAdmin !== "principal") {
     const existePrincipal = await existeAdminPrincipal(id);
     if (existePrincipal) {
       throw new Error("Ya existe un administrador principal");
@@ -137,7 +141,7 @@ export const updateAdmin = async (id, adminData, currentUserId) => {
   return id;
 };
 
-// Eliminar administrador (solo de Firestore, no de Firebase Auth)
+// "Eliminar" administrador (convertir a cliente)
 export const deleteAdmin = async (id, currentUserId) => {
   const adminRef = doc(db, "usuarios", id);
   const adminDoc = await getDoc(adminRef);
@@ -157,14 +161,16 @@ export const deleteAdmin = async (id, currentUserId) => {
   }
 
   try {
-    // Solo eliminamos el documento en Firestore
-    await deleteDoc(adminRef);
-
-    // Si luego quieres borrar desde backend, deberías hacerlo con una Cloud Function
-
+    // Convertir a cliente en lugar de eliminar
+    await updateDoc(adminRef, {
+      tipo: "cliente",
+      tipoAdmin: null,
+      demotedAt: new Date()
+    });
+    
     return id;
   } catch (error) {
-    console.error("Error al eliminar usuario:", error);
+    console.error("Error al convertir administrador a cliente:", error);
     throw error;
   }
 };
