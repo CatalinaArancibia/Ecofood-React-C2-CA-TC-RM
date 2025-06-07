@@ -41,7 +41,7 @@ export default function Clientes() {
 
   const fetchComunas = async () => {
     try {
-      const docRef = doc(db, "config", "comunas");
+      const docRef = doc(db, "config", "comuna");
       const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
         setComunas(docSnap.data().lista);
@@ -59,8 +59,15 @@ export default function Clientes() {
     e.preventDefault();
     setError(null);
 
+    const rutRegex = /^\d{7,8}-[0-9kK]{1}$/;
+
     if (!form.nombre.trim() || !form.rut.trim()) {
       setError("Nombre y RUT son obligatorios");
+      return;
+    }
+
+    if (!rutRegex.test(form.rut)) {
+      setError("El RUT debe tener el formato 12345678-9");
       return;
     }
 
@@ -112,8 +119,8 @@ export default function Clientes() {
   };
 
   const clientesFiltrados = clientes.filter((cliente) =>
-    cliente.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
-    cliente.rut.toLowerCase().includes(busqueda.toLowerCase())
+    cliente?.nombre?.toLowerCase().includes(busqueda.toLowerCase()) ||
+    cliente?.rut?.toLowerCase().includes(busqueda.toLowerCase())
   );
 
   return (
@@ -141,6 +148,8 @@ export default function Clientes() {
             value={form.nombre}
             onChange={handleChange}
             required
+            minLength={3}
+            maxLength={50}
           />
         </div>
 
@@ -152,6 +161,10 @@ export default function Clientes() {
             value={form.rut}
             onChange={handleChange}
             required
+            pattern="\d{7,8}-[0-9kK]{1}"
+            minLength={9}
+            maxLength={10}
+            title="Formato válido: 12345678-9"
           />
         </div>
 
@@ -162,6 +175,8 @@ export default function Clientes() {
             name="telefono"
             value={form.telefono}
             onChange={handleChange}
+            minLength={8}
+            maxLength={15}
           />
         </div>
 
@@ -172,6 +187,7 @@ export default function Clientes() {
             name="direccion"
             value={form.direccion}
             onChange={handleChange}
+            maxLength={80}
           />
         </div>
 
@@ -198,6 +214,7 @@ export default function Clientes() {
             name="correo"
             value={form.correo}
             onChange={handleChange}
+            maxLength={80}
           />
         </div>
 
