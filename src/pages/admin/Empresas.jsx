@@ -89,7 +89,7 @@ export default function Empresas() {
     const { name, value, type, checked } = e.target;
     
     // Validaciones de longitud máxima
-    if (name === "telefono" && value.length > 15) return;
+    if (name === "telefono" && value.length > 9) return;
     if (name === "rut" && value.length > 12) return;
     if (name === "nombre" && value.length > 50) return;
     if (name === "direccion" && value.length > 100) return;
