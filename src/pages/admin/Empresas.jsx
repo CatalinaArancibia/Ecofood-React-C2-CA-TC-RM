@@ -27,7 +27,7 @@ export default function Empresas() {
   const [editId, setEditId] = useState(null);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
-  const [productosData, setProductosData] = useState({}); // Ahora almacenamos todos los datos de productos
+  const [productosData, setProductosData] = useState({});
   const [loading, setLoading] = useState(true);
   const [showProductosModal, setShowProductosModal] = useState(false);
   const [currentProductos, setCurrentProductos] = useState([]);
@@ -41,13 +41,11 @@ export default function Empresas() {
         ]);
         setEmpresas(empresasData);
         
-        // Cargar productos para cada empresa
         const productosPorEmpresa = {};
         for (const empresa of empresasData) {
           const productos = await getProductosByEmpresaId(empresa.id);
           productosPorEmpresa[empresa.id] = productos;
           
-          // Actualizar estado de manejaProductos si la empresa tiene productos
           if (productos.length > 0 && !empresa.manejaProductos) {
             await updateEmpresa(empresa.id, { ...empresa, manejaProductos: true });
           }
@@ -76,15 +74,27 @@ export default function Empresas() {
     }
   };
 
-  const empresasFiltradas = empresas.filter(
-    (e) =>
-      e.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
-      e.rut.toLowerCase().includes(busqueda.toLowerCase()) ||
-      (e.comuna && e.comuna.toLowerCase().includes(busqueda.toLowerCase()))
-  );
+  const empresasFiltradas = empresas.filter((empresa) => {
+    const nombre = empresa.nombre ? empresa.nombre.toLowerCase() : '';
+    const rut = empresa.rut ? empresa.rut.toLowerCase() : '';
+    const comuna = empresa.comuna ? empresa.comuna.toLowerCase() : '';
+    const busquedaLower = busqueda.toLowerCase();
+    
+    return nombre.includes(busquedaLower) || 
+           rut.includes(busquedaLower) || 
+           comuna.includes(busquedaLower);
+  });
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
+    
+    // Validaciones de longitud máxima
+    if (name === "telefono" && value.length > 9) return;
+    if (name === "rut" && value.length > 12) return;
+    if (name === "nombre" && value.length > 50) return;
+    if (name === "direccion" && value.length > 100) return;
+    if (name === "correo" && value.length > 50) return;
+    
     setForm(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value
@@ -96,12 +106,15 @@ export default function Empresas() {
     setError(null);
     setSuccess(null);
     
+    // Validaciones de campos obligatorios
     if (!form.nombre.trim() || !form.rut.trim() || !form.comuna.trim()) {
       setError("Nombre, RUT y Comuna son obligatorios");
       return;
     }
 
-    if (!/^[0-9]{7,8}-[0-9kK]{1}$/.test(form.rut)) {
+    // Validación de RUT con expresión regular simple
+    const rutRegex = /^\d{7,8}-[\dkK]$/;
+    if (!rutRegex.test(form.rut)) {
       setError("El RUT debe tener formato 12345678-9");
       return;
     }
@@ -114,6 +127,8 @@ export default function Empresas() {
         await addEmpresa(form);
         setSuccess("Empresa creada correctamente");
       }
+      
+      // Resetear formulario
       setForm({ 
         nombre: "", 
         rut: "", 
@@ -124,7 +139,9 @@ export default function Empresas() {
         manejaProductos: false
       });
       setEditId(null);
-      cargarEmpresas();
+      
+      // Recargar datos
+      await cargarEmpresas();
     } catch (error) {
       setError(error.message || "Error al guardar la empresa");
     }
@@ -136,7 +153,6 @@ export default function Empresas() {
       const data = await getEmpresas();
       setEmpresas(data);
       
-      // Actualizar datos de productos
       const productosPorEmpresa = {};
       for (const empresa of data) {
         const productos = await getProductosByEmpresaId(empresa.id);
@@ -151,7 +167,6 @@ export default function Empresas() {
   };
 
   const handleEdit = (empresa) => {
-    // Verificar si la empresa tiene productos para actualizar el checkbox
     const tieneProductos = productosData[empresa.id] && productosData[empresa.id].length > 0;
     
     setForm({ 
@@ -212,6 +227,7 @@ export default function Empresas() {
         className="busqueda-empresa-input"
         value={busqueda}
         onChange={(e) => setBusqueda(e.target.value)}
+        maxLength="50"
       />
 
       {error && <div className="alert alert-danger">{error}</div>}
@@ -229,6 +245,8 @@ export default function Empresas() {
               value={form.nombre}
               onChange={handleChange}
               required
+              minLength="3"
+              maxLength="50"
             />
           </div>
 
@@ -240,6 +258,8 @@ export default function Empresas() {
               value={form.rut}
               onChange={handleChange}
               required
+              minLength="9"
+              maxLength="12"
             />
           </div>
         </div>
@@ -252,16 +272,19 @@ export default function Empresas() {
               name="direccion"
               value={form.direccion}
               onChange={handleChange}
+              maxLength="100"
             />
           </div>
 
           <div className="form-group">
             <label>Teléfono</label>
             <input
-              type="text"
+              type="tel"
               name="telefono"
               value={form.telefono}
               onChange={handleChange}
+              minLength="8"
+              maxLength="15"
             />
           </div>
         </div>
@@ -291,6 +314,7 @@ export default function Empresas() {
               name="correo"
               value={form.correo}
               onChange={handleChange}
+              maxLength="50"
             />
           </div>
         </div>
@@ -393,7 +417,6 @@ export default function Empresas() {
         </table>
       </div>
 
-      {/* Modal para mostrar productos */}
       {showProductosModal && (
         <div className="modal-overlay">
           <div className="modal-container">
