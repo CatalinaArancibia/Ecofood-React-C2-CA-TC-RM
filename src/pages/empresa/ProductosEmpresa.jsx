@@ -66,6 +66,8 @@ export default function ProductosEmpresa() {
 
         if (estadoFiltro === "disponibles") {
             coincideEstado = p.estado === "disponible";
+        } else if (estadoFiltro === "inactivos") {
+            coincideEstado = p.estado === "inactivo";
         } else if (estadoFiltro === "por-vencer") {
             const diferencia = vencimiento - hoy;
             coincideEstado = diferencia <= 3 * 86400000 && diferencia >= 0;
@@ -125,6 +127,7 @@ export default function ProductosEmpresa() {
                     >
                         <option value="todos">Todos</option>
                         <option value="disponibles">Disponibles</option>
+                        <option value="inactivos">Inactivos</option>
                         <option value="por-vencer">Por vencer</option>
                         <option value="vencidos">Vencidos</option>
                     </select>

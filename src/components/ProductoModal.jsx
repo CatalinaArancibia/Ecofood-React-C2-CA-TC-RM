@@ -23,23 +23,26 @@ const ProductoModal = ({ producto, empresaId, onClose }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     const hoy = new Date().toISOString().split("T")[0];
 
-    if (
-      !nombre.trim() ||
-      !descripcion.trim() ||
-      !vencimiento ||
-      isNaN(cantidad) || Number(cantidad) < 0 ||
-      isNaN(precio) || Number(precio) < 0
-    ) {
-      Swal.fire("Error", "Completa todos los campos correctamente", "error");
-      return;
+    if (!nombre.trim() || nombre.length < 3 || nombre.length > 60) {
+      return Swal.fire("Error", "El nombre debe tener entre 3 y 60 caracteres.", "warning");
     }
 
-    if (vencimiento < hoy) {
-      Swal.fire("Error", "La fecha de vencimiento no puede ser anterior a hoy", "error");
-      return;
+    if (!descripcion.trim() || descripcion.length < 10 || descripcion.length > 300) {
+      return Swal.fire("Error", "La descripción debe tener entre 10 y 300 caracteres.", "warning");
+    }
+
+    if (cantidad === "" || isNaN(cantidad) || Number(cantidad) <= 0 || Number(cantidad) > 99999) {
+      return Swal.fire("Error", "La cantidad debe estar entre 1 y 99.999.", "warning");
+    }
+
+    if (precio === "" || isNaN(precio) || Number(precio) < 0 || Number(precio) > 99999999) {
+      return Swal.fire("Error", "El precio debe ser entre 0 y 99.999.999.", "warning");
+    }
+
+    if (!vencimiento || vencimiento < hoy) {
+      return Swal.fire("Error", "La fecha de vencimiento no puede ser anterior a hoy.", "warning");
     }
 
     const data = {
@@ -90,6 +93,8 @@ const ProductoModal = ({ producto, empresaId, onClose }) => {
                     onChange={(e) => setNombre(e.target.value)}
                     placeholder="Nombre del producto"
                     required
+                    minLength={3}
+                    maxLength={60}
                   />
                 </div>
 
@@ -101,7 +106,8 @@ const ProductoModal = ({ producto, empresaId, onClose }) => {
                     value={cantidad}
                     onChange={(e) => setCantidad(e.target.value)}
                     placeholder="Ej: 20"
-                    min="0"
+                    min="1"
+                    max="99999"
                   />
                 </div>
 
@@ -114,6 +120,7 @@ const ProductoModal = ({ producto, empresaId, onClose }) => {
                     onChange={(e) => setPrecio(e.target.value)}
                     placeholder="Ej: 1000"
                     min="0"
+                    max="99999999"
                   />
                   {Number(precio) === 0 && (
                     <div className="form-text text-success fw-bold">Este producto es gratuito</div>
@@ -157,6 +164,8 @@ const ProductoModal = ({ producto, empresaId, onClose }) => {
                     onChange={(e) => setDescripcion(e.target.value)}
                     placeholder="Describe brevemente el producto"
                     required
+                    minLength={10}
+                    maxLength={300}
                   ></textarea>
                 </div>
               </div>
@@ -174,3 +183,4 @@ const ProductoModal = ({ producto, empresaId, onClose }) => {
 };
 
 export default ProductoModal;
+

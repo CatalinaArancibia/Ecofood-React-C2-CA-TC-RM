@@ -73,9 +73,18 @@ export default function PerfilEmpresa() {
     };
 
     const guardarCambios = async () => {
-        if (!formData.comuna || !formData.direccion || !formData.nombre) {
-            Swal.fire("Campos incompletos", "Debes completar nombre, comuna y dirección", "warning");
-            return;
+        // Validación de campos vacíos
+        if (!formData.nombre.trim() || !formData.direccion.trim() || !formData.comuna) {
+            return Swal.fire("Campos incompletos", "Debes completar nombre, comuna y dirección", "warning");
+        }
+
+        // Validaciones de longitud
+        if (formData.nombre.length < 3 || formData.nombre.length > 60) {
+            return Swal.fire("Error", "El nombre debe tener entre 3 y 60 caracteres", "warning");
+        }
+
+        if (formData.direccion.length < 5 || formData.direccion.length > 100) {
+            return Swal.fire("Error", "La dirección debe tener entre 5 y 100 caracteres", "warning");
         }
 
         try {
@@ -84,7 +93,7 @@ export default function PerfilEmpresa() {
                 nombre: formData.nombre,
                 comuna: formData.comuna,
                 direccion: formData.direccion,
-                ubicacion: `${formData.comuna}, ${formData.direccion}` // ← SE GUARDA AQUÍ
+                ubicacion: `${formData.comuna}, ${formData.direccion}`
             });
 
             Swal.fire("Guardado", "Perfil actualizado correctamente", "success");
@@ -93,6 +102,7 @@ export default function PerfilEmpresa() {
             Swal.fire("Error", "No se pudieron guardar los cambios", "error");
         }
     };
+
 
 
 
@@ -124,7 +134,7 @@ export default function PerfilEmpresa() {
                         disabled
                     />
                 </div>
-                
+
                 <div className="col-md-12 mb-3">
                     <label className="form-label">Ubicación completa</label>
                     <input
