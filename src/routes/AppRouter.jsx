@@ -17,6 +17,7 @@ import Clientes from "../pages/admin/Clientes";
 import Productos from "../pages/admin/Productos";
 import Administradores from "../pages/admin/Administradores";
 
+import EmpresaLayout from "../components/layout/empresa/EmpresaLayout";
 
 export default function AppRouter() {
   return (
@@ -60,22 +61,18 @@ export default function AppRouter() {
       />
 
       <Route
-        path="/empresa/perfil"
+        path="/empresa/*"
         element={
           <ProtectedRoute requiredRole="empresa">
-            <PerfilEmpresa />
+            <EmpresaLayout />
           </ProtectedRoute>
         }
-      />
-
-      <Route
-        path="/empresa/productos"
-        element={
-          <ProtectedRoute requiredRole="empresa">
-            <ProductosEmpresa />
-          </ProtectedRoute>
-        }
-      />
+      >
+        <Route index element={<Navigate to="dashboard" replace />} />
+        <Route path="dashboard" element={<PerfilEmpresa />} /> {/* <- aquí redirige */}
+        <Route path="perfil" element={<PerfilEmpresa />} />
+        <Route path="productos" element={<ProductosEmpresa />} />
+      </Route>
 
 
       <Route path="*" element={<NotFound />} />

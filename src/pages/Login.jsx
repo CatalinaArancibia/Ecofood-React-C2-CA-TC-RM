@@ -48,7 +48,7 @@ export default function Login() {
       } else if (datos.tipo === "cliente") {
         navigate("/cliente/dashboard");
       } else if (datos.tipo === "empresa") {
-        navigate("/empresa/perfil");
+        navigate("/empresa/dashboard");
       } else {
         navigate("/home"); // si no tiene tipo definido
       }

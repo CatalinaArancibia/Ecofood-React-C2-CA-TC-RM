@@ -1,78 +1,38 @@
-// src/pages/empresa/PerfilEmpresa.jsx
-import React, { useEffect, useState } from "react";
-import { getEmpresaById as getEmpresa, updateEmpresa } from "../../services/empresaService";
-import { useAuth } from "../../context/AuthContext";
-import Swal from "sweetalert2";
+import React from "react";
+import { Link } from "react-router-dom";
+import "../admin/AdminDashboard.css";
 
-const PerfilEmpresa = () => {
-    const { user } = useAuth();
-    const [empresa, setEmpresa] = useState(null);
-    const [ubicacion, setUbicacion] = useState("");
-    const [editando, setEditando] = useState(false);
+export default function EmpresaDashboard() {
+  return (
+    <div className="admin-dashboard">
+      <h1>Perfil de Empresa</h1>
+      <p>Bienvenido al perfil de empresa en EcoFood</p>
 
-    useEffect(() => {
-        const cargarDatos = async () => {
-            console.log("UID del usuario:", user.uid);
-            const datos = await getEmpresa(user.uid);
-            setEmpresa(datos);
-            setUbicacion(datos?.ubicacion || "");
-        };
-        cargarDatos();
-    }, [user.uid]);
-
-    const guardarCambios = async () => {
-        if (!ubicacion.trim()) {
-            Swal.fire("Error", "La ubicación no puede estar vacía", "error");
-            return;
-        }
-
-        await updateEmpresa(user.uid, { ubicacion });
-        Swal.fire("Éxito", "Ubicación actualizada correctamente", "success");
-        setEditando(false);
-    };
-
-    if (!empresa) return <div className="container mt-5">Cargando perfil...</div>;
-
-    return (
-        <div className="container mt-5">
-            <h2 className="mb-4">Perfil de Empresa</h2>
-            <div className="card p-4 shadow">
-                <div className="mb-3">
-                    <label className="form-label">Nombre</label>
-                    <input className="form-control" value={empresa.nombre} disabled />
-                </div>
-                <div className="mb-3">
-                    <label className="form-label">Correo</label>
-                    <input className="form-control" value={empresa.correo} disabled />
-                </div>
-                <div className="mb-3">
-                    <label className="form-label">Ubicación</label>
-                    <input
-                        className="form-control"
-                        value={ubicacion}
-                        disabled={!editando}
-                        onChange={(e) => setUbicacion(e.target.value)}
-                    />
-                </div>
-                <div className="d-flex gap-2">
-                    {!editando ? (
-                        <button className="btn btn-primary" onClick={() => setEditando(true)}>
-                            Editar Ubicación
-                        </button>
-                    ) : (
-                        <>
-                            <button className="btn btn-success" onClick={guardarCambios}>
-                                Guardar Cambios
-                            </button>
-                            <button className="btn btn-secondary" onClick={() => setEditando(false)}>
-                                Cancelar
-                            </button>
-                        </>
-                    )}
-                </div>
-            </div>
+      <section className="dashboard-cards">
+        <div className="card-dashboard">
+          <h3>Mi Empresa</h3>
+          <p>Visualiza o edita la información de tu empresa registrada.</p>
+          <Link to="/empresa/perfil" className="card-button">
+            Ver Perfil
+          </Link>
         </div>
-    );
-};
 
-export default PerfilEmpresa;
+        <div className="card-dashboard">
+          <h3>Mis Productos</h3>
+          <p>Gestiona los productos asociados a tu empresa.</p>
+          <Link to="/empresa/productos" className="card-button">
+            Ver Productos
+          </Link>
+        </div>
+
+        <div className="card-dashboard">
+          <h3>Pedidos</h3>
+          <p>Consulta los pedidos realizados por clientes a tu empresa.</p>
+          <Link to="/empresa/pedidos" className="card-button">
+            Ver Pedidos
+          </Link>
+        </div>
+      </section>
+    </div>
+  );
+}
