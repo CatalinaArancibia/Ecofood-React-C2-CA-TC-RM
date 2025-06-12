@@ -177,9 +177,10 @@ export default function ProductosEmpresa() {
                 ))}
             </div>
 
+            {/* Paginación */}
             <div className="mt-4 d-flex justify-content-center gap-2 flex-wrap">
                 <button
-                    className="btn btn-outline-secondary"
+                    className="btn btn-outline-success"
                     disabled={paginaActual === 1}
                     onClick={() => setPaginaActual((prev) => Math.max(prev - 1, 1))}
                 >
@@ -189,7 +190,7 @@ export default function ProductosEmpresa() {
                 {Array.from({ length: totalPaginas }, (_, i) => (
                     <button
                         key={i}
-                        className={`btn ${paginaActual === i + 1 ? "btn-primary" : "btn-outline-primary"}`}
+                        className={`btn ${paginaActual === i + 1 ? "btn-success" : "btn-outline-success"}`}
                         onClick={() => setPaginaActual(i + 1)}
                     >
                         {i + 1}
@@ -197,13 +198,15 @@ export default function ProductosEmpresa() {
                 ))}
 
                 <button
-                    className="btn btn-outline-secondary"
+                    className="btn btn-outline-success"
                     disabled={paginaActual === totalPaginas}
                     onClick={() => setPaginaActual((prev) => Math.min(prev + 1, totalPaginas))}
                 >
                     Página siguiente →
                 </button>
             </div>
+
+
 
 
             {mostrarModal && (
@@ -220,7 +223,7 @@ export default function ProductosEmpresa() {
             {scrollY > 100 && (
                 <button
                     onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-                    className="btn btn-primary rounded-circle"
+                    className="btn btn-success rounded-circle"
                     style={{
                         position: "fixed",
                         bottom: "30px",

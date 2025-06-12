@@ -166,7 +166,7 @@ export default function ProductosAdminVisual() {
       {/* Paginación */}
       <div className="mt-4 d-flex justify-content-center gap-2 flex-wrap">
         <button
-          className="btn btn-outline-secondary"
+          className="btn btn-outline-success"
           disabled={paginaActual === 1}
           onClick={() => setPaginaActual((prev) => Math.max(prev - 1, 1))}
         >
@@ -176,7 +176,7 @@ export default function ProductosAdminVisual() {
         {Array.from({ length: totalPaginas }, (_, i) => (
           <button
             key={i}
-            className={`btn ${paginaActual === i + 1 ? "btn-primary" : "btn-outline-primary"}`}
+            className={`btn ${paginaActual === i + 1 ? "btn-success" : "btn-outline-success"}`}
             onClick={() => setPaginaActual(i + 1)}
           >
             {i + 1}
@@ -184,13 +184,14 @@ export default function ProductosAdminVisual() {
         ))}
 
         <button
-          className="btn btn-outline-secondary"
+          className="btn btn-outline-success"
           disabled={paginaActual === totalPaginas}
           onClick={() => setPaginaActual((prev) => Math.min(prev + 1, totalPaginas))}
         >
           Página siguiente →
         </button>
       </div>
+
 
       {/* Botón de volver arriba */}
       {scrollY > 100 && (
