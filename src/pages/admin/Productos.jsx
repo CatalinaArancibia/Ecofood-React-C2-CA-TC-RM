@@ -1,380 +1,219 @@
-import React, { useState, useEffect } from 'react';
-import {
-  getProductos,
-  addProducto,
-  updateProducto,
-  deleteProducto
-} from '../../services/productoService';
-import { getEmpresas, addProductoToEmpresa, removeProductoFromEmpresa } from '../../services/empresaService';
-import './Productos.css';
+import React, { useEffect, useState } from "react";
+import { getProductos } from "../../services/productoService";
+import { getEmpresas } from "../../services/empresaService";
 
-export default function Productos() {
+export default function ProductosAdminVisual() {
   const [productos, setProductos] = useState([]);
   const [empresas, setEmpresas] = useState([]);
   const [busqueda, setBusqueda] = useState("");
-  const [form, setForm] = useState({
-    nombre: "",
-    descripcion: "",
-    precio: 0,
-    stock: 0,
-    categoria: ""
-  });
-  const [empresasSeleccionadas, setEmpresasSeleccionadas] = useState([]);
-  const [editId, setEditId] = useState(null);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  // Categorías predefinidas
-  const categorias = [
-    "Electrónica",
-    "Ropa",
-    "Hogar",
-    "Alimentos",
-    "Bebidas",
-    "Juguetes",
-    "Deportes",
-    "Oficina"
-  ];
+  const [estadoFiltro, setEstadoFiltro] = useState("todos");
+  const [orden, setOrden] = useState("nombre-asc");
+  const [limite, setLimite] = useState(5);
+  const [paginaActual, setPaginaActual] = useState(1);
+  const [scrollY, setScrollY] = useState(0);
 
   useEffect(() => {
-    const cargarDatos = async () => {
+    const fetchData = async () => {
       try {
         const [productosData, empresasData] = await Promise.all([
           getProductos(),
-          getEmpresas()
+          getEmpresas(),
         ]);
         setProductos(productosData);
         setEmpresas(empresasData);
       } catch (error) {
-        setError("Error al cargar datos");
-        console.error(error);
-      } finally {
-        setLoading(false);
+        console.error("Error al cargar productos o empresas:", error);
       }
     };
-    cargarDatos();
+    fetchData();
   }, []);
 
-  const productosFiltrados = productos.filter(
-    (p) =>
-      p.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
-      p.descripcion.toLowerCase().includes(busqueda.toLowerCase()) ||
-      p.categoria.toLowerCase().includes(busqueda.toLowerCase())
-  );
+  useEffect(() => {
+    const handleScroll = () => setScrollY(window.scrollY);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+  const getEmpresaNombre = (empresaId) => {
+    const empresa = empresas.find((e) => e.id === empresaId);
+    return empresa ? empresa.nombre : "Desconocido";
   };
 
-  const handleEmpresaToggle = (empresaId) => {
-    setEmpresasSeleccionadas(prev =>
-      prev.includes(empresaId)
-        ? prev.filter(id => id !== empresaId)
-        : [...prev, empresaId]
-    );
-  };
+  // Filtro y búsqueda
+  const productosFiltrados = productos.filter((p) => {
+    const term = busqueda.toLowerCase();
+    const empresaNombre = getEmpresaNombre(p.empresaId)?.toLowerCase() || "";
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError(null);
-    setSuccess(null);
+    const coincideBusqueda =
+      p.nombre.toLowerCase().includes(term) || empresaNombre.includes(term);
 
-    if (!form.nombre.trim()) {
-      setError("El nombre es obligatorio");
-      return;
-    }
+    const coincideEstado =
+      estadoFiltro === "todos" || p.estado === estadoFiltro;
 
-    try {
-      if (editId) {
-        // Actualizar producto
-        await updateProducto(editId, form);
-        
-        // Obtener empresas actuales del producto
-        const productoActual = productos.find(p => p.id === editId);
-        const empresasActuales = productoActual?.empresas || [];
-        
-        // Añadir a nuevas empresas
-        for (const empresaId of empresasSeleccionadas) {
-          if (!empresasActuales.includes(empresaId)) {
-            await addProductoToEmpresa(empresaId, editId);
-          }
-        }
-        
-        // Eliminar de empresas que ya no están seleccionadas
-        for (const empresaId of empresasActuales) {
-          if (!empresasSeleccionadas.includes(empresaId)) {
-            await removeProductoFromEmpresa(empresaId, editId);
-          }
-        }
-        
-        setSuccess("Producto actualizado correctamente");
-      } else {
-        // Crear nuevo producto
-        const nuevoProducto = await addProducto(form);
-        
-        // Añadir a empresas seleccionadas
-        for (const empresaId of empresasSeleccionadas) {
-          await addProductoToEmpresa(empresaId, nuevoProducto.id);
-        }
-        
-        setSuccess("Producto agregado correctamente");
-      }
-      
-      // Resetear formulario
-      setForm({
-        nombre: "",
-        descripcion: "",
-        precio: 0,
-        stock: 0,
-        categoria: ""
-      });
-      setEmpresasSeleccionadas([]);
-      setEditId(null);
-      cargarProductos();
-    } catch (error) {
-      setError(error.message || "Error al guardar el producto");
-      console.error(error);
-    }
-  };
+    return coincideBusqueda && coincideEstado;
+  });
 
-  const cargarProductos = async () => {
-    try {
-      const data = await getProductos();
-      setProductos(data);
-    } catch (error) {
-      setError("Error al cargar productos");
-      console.error(error);
-    }
-  };
+  // Ordenamiento
+  const productosOrdenados = [...productosFiltrados].sort((a, b) => {
+    if (orden === "nombre-asc") return a.nombre.localeCompare(b.nombre);
+    if (orden === "nombre-desc") return b.nombre.localeCompare(a.nombre);
+    if (orden === "precio-asc") return a.precio - b.precio;
+    if (orden === "precio-desc") return b.precio - a.precio;
+    return 0;
+  });
 
-  const handleEdit = async (producto) => {
-    setForm({
-      nombre: producto.nombre,
-      descripcion: producto.descripcion || "",
-      precio: producto.precio || 0,
-      stock: producto.stock || 0,
-      categoria: producto.categoria || ""
-    });
-    
-    // Cargar empresas asociadas a este producto
-    try {
-      const empresasProducto = await getEmpresasByProductoId(producto.id);
-      setEmpresasSeleccionadas(empresasProducto.map(e => e.id));
-    } catch (error) {
-      console.error("Error cargando empresas del producto:", error);
-      setEmpresasSeleccionadas([]);
-    }
-    
-    setEditId(producto.id);
-    window.scrollTo(0, 0);
-  };
-
-  const handleDelete = async (id) => {
-    if (window.confirm("¿Estás seguro de eliminar este producto?")) {
-      try {
-        await deleteProducto(id);
-        if (editId === id) {
-          setEditId(null);
-          setForm({
-            nombre: "",
-            descripcion: "",
-            precio: 0,
-            stock: 0,
-            categoria: ""
-          });
-          setEmpresasSeleccionadas([]);
-        }
-        setSuccess("Producto eliminado correctamente");
-        cargarProductos();
-      } catch (error) {
-        setError("Error al eliminar el producto");
-        console.error(error);
-      }
-    }
-  };
-
-  if (loading) return <div className="loading">Cargando...</div>;
+  // Paginación
+  const inicio = (paginaActual - 1) * limite;
+  const productosPaginados = productosOrdenados.slice(inicio, inicio + limite);
+  const totalPaginas = Math.ceil(productosOrdenados.length / limite);
 
   return (
-    <div className="productos-container">
-      <h2>Gestión de Productos</h2>
+    <div className="container py-4">
+      <h3>Visualización de Productos</h3>
 
-      <input
-        type="text"
-        placeholder="Buscar por nombre, descripción o categoría"
-        className="busqueda-producto-input"
-        value={busqueda}
-        onChange={(e) => setBusqueda(e.target.value)}
-      />
-
-      {error && <div className="alert alert-danger">{error}</div>}
-      {success && <div className="alert alert-success">{success}</div>}
-
-      <form onSubmit={handleSubmit} className="producto-form">
-        <h3>{editId ? "Editando Producto" : "Nuevo Producto"}</h3>
-
-        <div className="form-row">
-          <div className="form-group">
-            <label>Nombre*</label>
-            <input
-              type="text"
-              name="nombre"
-              value={form.nombre}
-              onChange={handleChange}
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label>Categoría</label>
-            <select
-              name="categoria"
-              value={form.categoria}
-              onChange={handleChange}
-            >
-              <option value="">-- Seleccione categoría --</option>
-              {categorias.map((cat, index) => (
-                <option key={index} value={cat}>
-                  {cat}
-                </option>
-              ))}
-            </select>
-          </div>
+      <div className="row g-3 mb-3">
+        <div className="col-md-4">
+          <input
+            type="text"
+            className="form-control"
+            placeholder="Buscar por producto o empresa..."
+            value={busqueda}
+            onChange={(e) => {
+              setBusqueda(e.target.value);
+              setPaginaActual(1);
+            }}
+          />
         </div>
 
-        <div className="form-row">
-          <div className="form-group">
-            <label>Descripción</label>
-            <textarea
-              name="descripcion"
-              value={form.descripcion}
-              onChange={handleChange}
-              rows="3"
-            />
-          </div>
+        <div className="col-md-3">
+          <select
+            className="form-select"
+            value={estadoFiltro}
+            onChange={(e) => {
+              setEstadoFiltro(e.target.value);
+              setPaginaActual(1);
+            }}
+          >
+            <option value="todos">Todos</option>
+            <option value="disponible">Disponible</option>
+            <option value="inactivo">Inactivo</option>
+          </select>
         </div>
 
-        <div className="form-row">
-          <div className="form-group">
-            <label>Precio ($)</label>
-            <input
-              type="number"
-              name="precio"
-              value={form.precio}
-              onChange={handleChange}
-              min="0"
-              step="0.01"
-            />
-          </div>
-
-          <div className="form-group">
-            <label>Stock</label>
-            <input
-              type="number"
-              name="stock"
-              value={form.stock}
-              onChange={handleChange}
-              min="0"
-            />
-          </div>
+        <div className="col-md-3">
+          <select
+            className="form-select"
+            value={orden}
+            onChange={(e) => setOrden(e.target.value)}
+          >
+            <option value="nombre-asc">Nombre (A-Z)</option>
+            <option value="nombre-desc">Nombre (Z-A)</option>
+            <option value="precio-asc">Precio (↑)</option>
+            <option value="precio-desc">Precio (↓)</option>
+          </select>
         </div>
 
-        <div className="empresas-section">
-          <h4>Empresas que venden este producto:</h4>
-          <div className="empresas-grid">
-            {empresas.map(empresa => (
-              <label key={empresa.id} className="empresa-checkbox">
-                <input
-                  type="checkbox"
-                  checked={empresasSeleccionadas.includes(empresa.id)}
-                  onChange={() => handleEmpresaToggle(empresa.id)}
-                />
-                <span>{empresa.nombre}</span>
-              </label>
-            ))}
-          </div>
+        <div className="col-md-2">
+          <select
+            className="form-select"
+            value={limite}
+            onChange={(e) => {
+              setLimite(Number(e.target.value));
+              setPaginaActual(1);
+            }}
+          >
+            <option value={5}>5 / página</option>
+            <option value={10}>10 / página</option>
+            <option value={20}>20 / página</option>
+          </select>
         </div>
+      </div>
 
-        <div className="form-actions">
-          <button type="submit" className="btn-submit">
-            {editId ? "Actualizar Producto" : "Agregar Producto"}
-          </button>
-          {editId && (
-            <button
-              type="button"
-              className="btn-cancel"
-              onClick={() => {
-                setEditId(null);
-                setForm({
-                  nombre: "",
-                  descripcion: "",
-                  precio: 0,
-                  stock: 0,
-                  categoria: ""
-                });
-                setEmpresasSeleccionadas([]);
-              }}
-            >
-              Cancelar
-            </button>
-          )}
-        </div>
-      </form>
-
+      {/* Tabla */}
       <div className="table-responsive">
-        <table className="productos-table">
+        <table className="table table-striped">
           <thead>
             <tr>
               <th>Nombre</th>
               <th>Descripción</th>
-              <th>Categoría</th>
               <th>Precio</th>
-              <th>Stock</th>
-              <th>Empresas</th>
-              <th>Acciones</th>
+              <th>Cantidad</th>
+              <th>Estado</th>
+              <th>Empresa</th>
             </tr>
           </thead>
           <tbody>
-            {productosFiltrados.length > 0 ? (
-              productosFiltrados.map((producto) => (
+            {productosPaginados.length > 0 ? (
+              productosPaginados.map((producto) => (
                 <tr key={producto.id}>
                   <td>{producto.nombre}</td>
                   <td>{producto.descripcion || "-"}</td>
-                  <td>{producto.categoria || "-"}</td>
-                  <td>${producto.precio?.toLocaleString() || "0"}</td>
-                  <td>{producto.stock || "0"}</td>
-                  <td>
-                    {producto.empresas?.length > 0 ? (
-                      <span className="empresas-count">{producto.empresas.length} empresas</span>
-                    ) : (
-                      "-"
-                    )}
-                  </td>
-                  <td>
-                    <button
-                      onClick={() => handleEdit(producto)}
-                      className="btn-editar"
-                    >
-                      Editar
-                    </button>
-                    <button
-                      onClick={() => handleDelete(producto.id)}
-                      className="btn-eliminar"
-                    >
-                      Eliminar
-                    </button>
-                  </td>
+                  <td>${producto.precio || 0}</td>
+                  <td>{producto.cantidad || 0}</td>
+                  <td>{producto.estado || "-"}</td>
+                  <td>{getEmpresaNombre(producto.empresaId)}</td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan="7">No se encontraron productos</td>
+                <td colSpan="6">No se encontraron productos</td>
               </tr>
             )}
           </tbody>
         </table>
       </div>
+
+      {/* Paginación */}
+      <div className="mt-4 d-flex justify-content-center gap-2 flex-wrap">
+        <button
+          className="btn btn-outline-success"
+          disabled={paginaActual === 1}
+          onClick={() => setPaginaActual((prev) => Math.max(prev - 1, 1))}
+        >
+          ← Página anterior
+        </button>
+
+        {Array.from({ length: totalPaginas }, (_, i) => (
+          <button
+            key={i}
+            className={`btn ${paginaActual === i + 1 ? "btn-success" : "btn-outline-success"}`}
+            onClick={() => setPaginaActual(i + 1)}
+          >
+            {i + 1}
+          </button>
+        ))}
+
+        <button
+          className="btn btn-outline-success"
+          disabled={paginaActual === totalPaginas}
+          onClick={() => setPaginaActual((prev) => Math.min(prev + 1, totalPaginas))}
+        >
+          Página siguiente →
+        </button>
+      </div>
+
+
+      {/* Botón de volver arriba */}
+      {scrollY > 100 && (
+        <button
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          className="btn btn-success rounded-circle"
+          style={{
+            position: "fixed",
+            bottom: "30px",
+            right: "30px",
+            zIndex: 9999,
+            width: "50px",
+            height: "50px",
+            fontSize: "1.5rem",
+            boxShadow: "0 2px 10px rgba(0,0,0,0.3)",
+            padding: "0",
+          }}
+          title="Volver arriba"
+        >
+          ↑
+        </button>
+      )}
     </div>
   );
 }

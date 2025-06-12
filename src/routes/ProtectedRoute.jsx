@@ -13,11 +13,12 @@ export default function ProtectedRoute({ children, requiredRole }) {
     return <Navigate to="/login" replace />;
   }
 
-  // Verificación de rol
+  // Usuario autenticado pero sin el rol requerido
   if (requiredRole && user.tipo !== requiredRole) {
-    // Redirigir siempre al dashboard correspondiente
-    if (user.tipo === 'admin') {
+    if (user.tipo === "admin") {
       return <Navigate to="/admin/dashboard" replace />;
+    } else if (user.tipo === "empresa") {
+      return <Navigate to="/empresa/dashboard" replace />;
     } else {
       return <Navigate to="/cliente/dashboard" replace />;
     }

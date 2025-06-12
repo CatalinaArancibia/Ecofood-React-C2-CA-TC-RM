@@ -19,6 +19,20 @@ export default function Home() {
   const [datos, setDatos] = useState({ nombre: "", tipo: "" });
   const navigate = useNavigate();
 
+  const irAlPanel = () => {
+    if (!user) return;
+
+    if (datos.tipo === "admin") {
+      navigate("/admin/dashboard");
+    } else if (datos.tipo === "empresa" || datos.tipo === "enterprise") {
+      navigate("/empresa/dashboard");
+    } else if (datos.tipo === "cliente") {
+      navigate("/cliente/dashboard");
+    }
+  };
+
+
+
   useEffect(() => {
     const fetchUserData = async () => {
       if (user?.uid) {
@@ -76,14 +90,16 @@ export default function Home() {
                   <>
                     <span className="user-greeting">Hola, {datos.nombre}</span>
 
-                    {datos.tipo === "cliente" && (
+                    {datos.tipo && (
                       <button
-                        onClick={() => navigate("/cliente/dashboard")}
+                        onClick={irAlPanel}
                         className="btn cerrar-sesion-btn ms-2"
                       >
-                        Volver a mi panel
+                        Ir al Panel
                       </button>
                     )}
+
+
 
                     <CerrarSesion className="btn cerrar-sesion-btn" />
                   </>

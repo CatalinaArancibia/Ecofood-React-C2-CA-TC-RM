@@ -5,7 +5,7 @@ import {
   writeBatch, serverTimestamp
 } from "firebase/firestore";
 
-const empresasCol = collection(db, "empresas");
+const empresasCol = collection(db, "usuarios");
 
 export const getEmpresas = async () => {
   try {
@@ -19,7 +19,7 @@ export const getEmpresas = async () => {
 
 export const getEmpresaById = async (id) => {
   try {
-    const docRef = doc(db, "empresas", id);
+    const docRef = doc(db, "usuarios", id);
     const docSnap = await getDoc(docRef);
     if (!docSnap.exists()) throw new Error("Empresa no encontrada");
     return { id: docSnap.id, ...docSnap.data() };
@@ -55,7 +55,7 @@ export const addEmpresa = async (empresaData) => {
 
 export const updateEmpresa = async (id, empresaData) => {
   try {
-    const empresaRef = doc(db, "empresas", id);
+    const empresaRef = doc(db, "usuarios", id);
     await updateDoc(empresaRef, {
       ...empresaData,
       updatedAt: serverTimestamp()
@@ -86,7 +86,7 @@ export const deleteEmpresa = async (id) => {
     }
     
     // Luego eliminamos la empresa
-    await deleteDoc(doc(db, "empresas", id));
+    await deleteDoc(doc(db, "usuarios", id));
   } catch (error) {
     console.error("Error al eliminar empresa:", error);
     throw error;
@@ -115,7 +115,7 @@ export const addProductoToEmpresa = async (empresaId, productoId) => {
   const batch = writeBatch(db);
   
   // Agregar producto a la empresa
-  const empresaRef = doc(db, "empresas", empresaId);
+  const empresaRef = doc(db, "usuarios", empresaId);
   batch.update(empresaRef, {
     productos: arrayUnion(productoId),
     updatedAt: serverTimestamp()
@@ -140,7 +140,7 @@ export const removeProductoFromEmpresa = async (empresaId, productoId) => {
   const batch = writeBatch(db);
   
   // Remover producto de la empresa
-  const empresaRef = doc(db, "empresas", empresaId);
+  const empresaRef = doc(db, "usuarios", empresaId);
   batch.update(empresaRef, {
     productos: arrayRemove(productoId),
     updatedAt: serverTimestamp()
