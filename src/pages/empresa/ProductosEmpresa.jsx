@@ -1,41 +1,39 @@
-import React, { useEffect, useState } from "react";
-import { getProductosByEmpresaId, deleteProducto } from "../../services/productoService";
-import { useAuth } from "../../context/AuthContext";
-import ProductoCard from "../../components/ProductoCard";
+import React, { useState, useEffect } from "react";
 import ProductoModal from "../../components/ProductoModal";
+import ProductoCard from "../../components/ProductoCard";
+import { getProductosByEmpresaId } from "../../services/productoService";
+import { useAuth } from "../../context/AuthContext";
 import Swal from "sweetalert2";
+import { deleteProducto } from "../../services/productoService";
 
-const ProductosEmpresa = () => {
+export default function ProductosEmpresa() {
     const { user } = useAuth();
     const [productos, setProductos] = useState([]);
-    const [filtro, setFiltro] = useState("todos");
+    const [busqueda, setBusqueda] = useState("");
+    const [productoSeleccionado, setProductoSeleccionado] = useState(null);
     const [mostrarModal, setMostrarModal] = useState(false);
-    const [productoEditar, setProductoEditar] = useState(null);
 
     const cargarProductos = async () => {
-        const lista = await getProductosByEmpresaId(user.uid);
-        setProductos(lista);
+        if (!user) return;
+        const data = await getProductosByEmpresaId(user.uid);
+        setProductos(data);
     };
 
     useEffect(() => {
         cargarProductos();
-    }, []);
-
-    const handleEditar = (producto) => {
-        setProductoEditar(producto);
-        setMostrarModal(true);
-    };
+    }, [busqueda, mostrarModal]);
 
     const handleEliminar = async (id) => {
-        const confirmacion = await Swal.fire({
-            title: "¿Estás seguro?",
-            text: "Esto eliminará el producto.",
+        const confirm = await Swal.fire({
+            title: "¿Eliminar producto?",
+            text: "Esta acción no se puede deshacer",
             icon: "warning",
             showCancelButton: true,
             confirmButtonText: "Sí, eliminar",
+            cancelButtonText: "Cancelar",
         });
 
-        if (confirmacion.isConfirmed) {
+        if (confirm.isConfirmed) {
             await deleteProducto(id);
             Swal.fire("Eliminado", "Producto eliminado correctamente", "success");
             cargarProductos();
@@ -43,34 +41,42 @@ const ProductosEmpresa = () => {
     };
 
     const productosFiltrados = productos.filter((p) => {
-        const hoy = new Date();
-        const vencimiento = new Date(p.vencimiento);
-        const diasRestantes = (vencimiento - hoy) / (1000 * 60 * 60 * 24);
-
-        if (filtro === "gratuitos") return p.precio === 0;
-        if (filtro === "valor") return p.precio > 0;
-        if (filtro === "por-vencer") return diasRestantes <= 3 && diasRestantes >= 0;
-        return true;
+        const term = busqueda.toLowerCase();
+        return (
+            p.nombre.toLowerCase().includes(term) ||
+            (p.categoria && p.categoria.toLowerCase().includes(term))
+        );
     });
 
     return (
-        <div className="container mt-5">
-            <h2 className="mb-4">Gestión de Productos</h2>
-
-            <div className="mb-3 d-flex gap-2 flex-wrap">
-                <button className="btn btn-primary" onClick={() => setMostrarModal(true)}>Crear Producto</button>
-                <button className="btn btn-outline-secondary" onClick={() => setFiltro("todos")}>Todos</button>
-                <button className="btn btn-outline-success" onClick={() => setFiltro("gratuitos")}>Gratuitos</button>
-                <button className="btn btn-outline-info" onClick={() => setFiltro("valor")}>Con Valor</button>
-                <button className="btn btn-outline-warning" onClick={() => setFiltro("por-vencer")}>Por Vencer</button>
+        <div className="container py-4">
+            <div className="d-flex justify-content-between align-items-center mb-3">
+                <h3>Mis Productos</h3>
+                <button className="btn btn-primary" onClick={() => setMostrarModal(true)}>
+                    Agregar Producto
+                </button>
             </div>
 
-            <div className="row">
-                {productosFiltrados.map((producto) => (
-                    <div className="col-md-4 mb-4" key={producto.id}>
+            <div className="mb-3">
+                <input
+                    type="text"
+                    className="form-control"
+                    placeholder="Buscar por nombre o categoría..."
+                    value={busqueda}
+                    onChange={(e) => setBusqueda(e.target.value)}
+                />
+            </div>
+
+            <div className="row row-cols-1 row-cols-md-3 g-4">
+                {productosFiltrados.length === 0 && <p>No hay productos disponibles.</p>}
+                {productosFiltrados.map((p) => (
+                    <div key={p.id} className="col">
                         <ProductoCard
-                            producto={producto}
-                            onEditar={handleEditar}
+                            producto={p}
+                            onEditar={(p) => {
+                                setProductoSeleccionado(p);
+                                setMostrarModal(true);
+                            }}
                             onEliminar={handleEliminar}
                         />
                     </div>
@@ -79,16 +85,15 @@ const ProductosEmpresa = () => {
 
             {mostrarModal && (
                 <ProductoModal
-                    producto={productoEditar}
+                    producto={productoSeleccionado}
+                    empresaId={user?.uid} // ← SE AGREGA AQUÍ
                     onClose={() => {
-                        setProductoEditar(null);
+                        setProductoSeleccionado(null);
                         setMostrarModal(false);
-                        cargarProductos();
                     }}
                 />
             )}
         </div>
     );
-};
+}
 
-export default ProductosEmpresa;

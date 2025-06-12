@@ -8,9 +8,9 @@ import ClienteDashboard from "../pages/cliente/ClienteDashboard";
 import AdminDashboard from "../pages/admin/AdminDashboard";
 import AdminLayout from "../components/layout/admin/AdminLayout";
 import NotFound from "../pages/NotFound";
-import PerfilEmpresa from "../pages/empresa/PerfilEmpresa";
+import EmpresaDashboard from "../pages/empresa/EmpresaDashboard";
 import ProductosEmpresa from "../pages/empresa/ProductosEmpresa";
-
+import PerfilEmpresa from "../pages/empresa/PerfilEmpresa";
 
 import Empresas from "../pages/admin/Empresas";
 import Clientes from "../pages/admin/Clientes";
@@ -69,10 +69,11 @@ export default function AppRouter() {
         }
       >
         <Route index element={<Navigate to="dashboard" replace />} />
-        <Route path="dashboard" element={<PerfilEmpresa />} /> {/* <- aquí redirige */}
-        <Route path="perfil" element={<PerfilEmpresa />} />
+        <Route path="dashboard" element={<EmpresaDashboard />} /> {/* Ahora es el dashboard */}
+        <Route path="perfil" element={<PerfilEmpresa />} />         {/* Nuevo perfil editable */}
         <Route path="productos" element={<ProductosEmpresa />} />
       </Route>
+
 
 
       <Route path="*" element={<NotFound />} />

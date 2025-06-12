@@ -1,11 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { addProducto as createProducto, updateProducto } from "../services/productoService";
-import { useAuth } from "../context/AuthContext";
 import Swal from "sweetalert2";
 
-const ProductoModal = ({ producto, onClose }) => {
-    const { user } = useAuth();
-
+const ProductoModal = ({ producto, empresaId, onClose }) => {
     const [nombre, setNombre] = useState("");
     const [descripcion, setDescripcion] = useState("");
     const [cantidad, setCantidad] = useState(0);
@@ -38,9 +35,12 @@ const ProductoModal = ({ producto, onClose }) => {
             cantidad: Number(cantidad),
             precio: Number(precio),
             estado,
-            vencimiento,
-            empresaId: user.uid,
+            vencimiento
         };
+
+        if (empresaId) {
+            data.empresaId = empresaId; // solo se incluye si fue pasado como prop
+        }
 
         try {
             if (producto) {
