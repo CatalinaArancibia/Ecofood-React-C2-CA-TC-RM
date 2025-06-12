@@ -1,8 +1,10 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import "../admin/AdminDashboard.css";
 
 export default function EmpresaDashboard() {
+  const navigate = useNavigate();
+
   return (
     <div className="admin-dashboard">
       <h1>Perfil de Empresa</h1>
@@ -31,8 +33,11 @@ export default function EmpresaDashboard() {
           <Link to="/empresa/pedidos" className="card-button">
             Ver Pedidos
           </Link>
+
+
         </div>
       </section>
     </div>
   );
 }
+

@@ -72,9 +72,9 @@ export default function AppRouter() {
         <Route path="dashboard" element={<EmpresaDashboard />} /> {/* Ahora es el dashboard */}
         <Route path="perfil" element={<PerfilEmpresa />} />         {/* Nuevo perfil editable */}
         <Route path="productos" element={<ProductosEmpresa />} />
+        <Route path="*" element={<NotFound />} />
+
       </Route>
-
-
 
       <Route path="*" element={<NotFound />} />
     </Routes>
