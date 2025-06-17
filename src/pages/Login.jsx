@@ -12,9 +12,9 @@ import { auth } from "../services/firebase";
 import Swal from "sweetalert2";
 
 import "./Login.css"; // Asegúrate de tener un archivo CSS para los estilos personalizados
-import logo from "../assets/img/conectela-logo.png"; // Importa el logo desde la carpeta `src/assets/img`
+import logo from "../assets/img/logo.png"; // Importa el logo desde la carpeta `src/assets/img`
 
-
+import "./Login.css";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -45,13 +45,14 @@ export default function Login() {
 
       if (datos.tipo === "admin") {
         navigate("/admin/dashboard");
+      } else if (datos.tipo === "cliente") {
+        navigate("/cliente/dashboard");
       } else if (datos.tipo === "empresa") {
         navigate("/empresa/dashboard");
-      } else if (datos.tipo === "proveedor") {
-        navigate("/proveedor/dashboard");
       } else {
-        navigate("/"); // si no tiene tipo definido, va al home
+        navigate("/home"); // si no tiene tipo definido
       }
+
     } catch (error) {
       console.error("Error al iniciar sesión:", error);
       Swal.fire(

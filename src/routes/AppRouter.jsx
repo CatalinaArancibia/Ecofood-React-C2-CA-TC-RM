@@ -4,7 +4,7 @@ import Login from "../pages/Login";
 import Register from "../pages/Register";
 import Home from "../pages/Home";
 import ProtectedRoute from "./ProtectedRoute";
-import ProveedorDashboard from "../pages/proveedor/ProveedorDashboard.jsx";
+import ClienteDashboard from "../pages/cliente/ClienteDashboard";
 import AdminDashboard from "../pages/admin/AdminDashboard";
 import AdminLayout from "../components/layout/admin/AdminLayout";
 import NotFound from "../pages/NotFound";
@@ -22,15 +22,15 @@ import EmpresaLayout from "../components/layout/empresa/EmpresaLayout";
 export default function AppRouter() {
   return (
     <Routes>
-      <Route path="/" element={<Home />} />
+      <Route path="/" element={<Navigate to="/login" />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
 
       <Route
-        path="/proveedor/dashboard"
+        path="/cliente/dashboard"
         element={
-          <ProtectedRoute requiredRole="proveedor">
-            <ProveedorDashboard />
+          <ProtectedRoute requiredRole="cliente">
+            <ClienteDashboard />
           </ProtectedRoute>
         }
       />
@@ -51,7 +51,14 @@ export default function AppRouter() {
         <Route path="administradores" element={<Administradores />} />
       </Route>
 
-      
+      <Route
+        path="/home"
+        element={
+          <ProtectedRoute>
+            <Home />
+          </ProtectedRoute>
+        }
+      />
 
       <Route
         path="/empresa/*"

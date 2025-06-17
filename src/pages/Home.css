@@ -1,6 +1,6 @@
 /* Header */
 header {
-  background-color: #6b0000;
+  background-color: #e6e6d6;
   padding: 1rem 2rem;
 }
 
@@ -11,13 +11,13 @@ header .d-flex img {
 header h1 {
   margin: 0;
   font-size: 2rem;
-  color: #d4af37;
+  color: #95a078;
   font-weight: bold;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   transition: color 0.3s ease;
 }
 
-/* Botones */
+/* Botones de inicio de sesión y registro */
 header a,
 button.btn {
   padding: 8px 16px;
@@ -28,45 +28,45 @@ button.btn {
 
 a.btn-outline-success,
 button.btn-outline-success {
-  border: 1px solid #d4af37;
-  color: #d4af37;
+  border: 1px solid #95a078;
+  color: #95a078;
 }
 
 a.btn-outline-success:hover,
 button.btn-outline-success:hover {
-  border: 1px solid #a57c1b;
-  background-color: #a57c1b;
+  border: 1px solid #5a6049;
+  background-color: #5a6049;
   color: white;
 }
 
 a.btn-success,
 button.btn-success {
-  border: 1px solid #d4af37;
-  background-color: #d4af37;
+  border: 1px solid #95a078;
+  background-color: #95a078;
   color: white;
 }
 
 a.btn-success:hover,
 button.btn-success:hover {
-  border: 1px solid #d4af37;
-  background-color: #a57c1b;
+  border: 1px solid #95a078;
+  background-color: #5a6049;
 }
 
-/* Botón cerrar sesión */
+/* Estilo para el botón de cerrar sesión */
 .cerrar-sesion-btn {
-  color: #d4af37;
+  color: #95a078; /* Verde suave */
   font-weight: bold;
   font-size: 1rem;
   padding: 5px 10px;
   border-radius: 10px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Sombra ligera */
   display: inline-block;
   margin-right: 10px;
 }
 
 .cerrar-sesion-btn:hover {
-  background-color: #a57c1b;
-  color: white;
+  background-color: #5a6049; /* Fondo verde oscuro al pasar el cursor */
+  color: white; /* Texto blanco */
 }
 
 /* Body */
@@ -80,9 +80,9 @@ body {
 
 /* Navbar */
 nav.navbar {
-  background-color: #d4af37;
-  border-top: 1px solid #d4af37;
-  border-bottom: 1px solid #d4af37;
+  background-color: #97a278;
+  border-top: 1px solid #97a278;
+  border-bottom: 1px solid #97a278;
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
 }
@@ -103,7 +103,7 @@ nav.navbar {
   left: 0;
   height: 3px;
   width: 0;
-  background-color: #f5e8b0;
+  background-color: #dadfca;
   transition: width 0.3s ease-in-out;
 }
 
@@ -125,7 +125,7 @@ section {
 }
 
 section h2 {
-  color: #d4af37;
+  color: #97a278;
   margin-bottom: 1rem;
 }
 
@@ -158,7 +158,7 @@ section h2 {
   margin-bottom: 30px;
   padding: 20px;
   border-radius: 10px;
-  background-color: #6b0000;
+  background-color: #dfdace;
 }
 
 #vision {
@@ -222,7 +222,7 @@ section h2 {
 }
 
 #comentarios h2 {
-  color: #d4af37;
+  color: #97a278;
   margin-bottom: 1.5rem;
   text-align: center;
 }
@@ -230,7 +230,7 @@ section h2 {
 #comentarios .row .col-md-4 blockquote {
   margin-bottom: 1.5rem;
   padding: 1rem;
-  border-left: 4px solid #d4af37;
+  border-left: 4px solid #97a278;
   border-radius: 5px;
   background-color: #fff;
   min-height: 150px;
@@ -253,7 +253,7 @@ section h2 {
 
 /* Footer */
 footer#contacto {
-  background-color: #6b0000;
+  background-color: #e5e5d5;
   color: rgb(0, 0, 0);
   padding: 1rem 2rem;
   text-align: center;
@@ -278,9 +278,9 @@ footer#contacto ul li {
 }
 
 .frase-transparente {
-  background-color: rgba(212, 175, 55, 0.3);
-  color: #6b0000;
-  border: 1px solid #a57c1b;
+  background-color: rgba(149, 160, 120, 0.3);
+  color: #2f331f;
+  border: 1px solid #5a6049;
   border-radius: 10px;
   padding: 14px 20px;
   font-weight: 600;
@@ -290,7 +290,7 @@ footer#contacto ul li {
 
 /* Estilo para el saludo del usuario */
 .user-greeting {
-  color: #d4af37;
+  color: #95a078; /* Verde suave */
   font-weight: bold;
   font-size: 1rem;
   padding: 5px 10px;
@@ -311,3 +311,6 @@ footer#contacto ul li {
     line-height: 1.5;
   }
 }
+
+
+

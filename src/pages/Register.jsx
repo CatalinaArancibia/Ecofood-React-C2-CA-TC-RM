@@ -21,7 +21,7 @@ export default function Register() {
   const [comuna, setComuna] = useState("");
   const [telefono, setTelefono] = useState("");
   const [comunas, setComunas] = useState([]); // Estado para almacenar las comunas
-  const [tipo, setTipo] = useState("");
+  const tipo = "empresa"; // Tipo de usuario fijo como "Cliente"
   const navigate = useNavigate();
 
   // Firestore instance
@@ -183,22 +183,6 @@ export default function Register() {
               title="Por favor, ingresa solo números" // Mensaje de validación
             />
           </div>
-          <div className="mb-3">
-            <label className="form-label">Tipo de usuario</label>
-            <select
-              className="form-select"
-              value={tipo}
-              onChange={(e) => setTipo(e.target.value)}
-              required
-            >
-              <option value="" disabled>
-                Selecciona un tipo
-              </option>
-              <option value="empresa">Empresa</option>
-              <option value="proveedor">Proveedor</option>
-            </select>
-          </div>
-
           <button
             type="submit"
             className="btn btn-animate w-100"
