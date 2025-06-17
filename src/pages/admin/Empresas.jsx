@@ -1,5 +1,4 @@
-import React, { useEffect, useState, useContext } from "react";
-import { AuthContext } from "../../context/AuthContext";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   getEmpresas,
@@ -13,15 +12,12 @@ import { db } from "../../services/firebase";
 import './Empresas.css';
 
 export default function Empresas() {
-
-  const { user } = useContext(AuthContext);
-
   const [empresas, setEmpresas] = useState([]);
   const [busqueda, setBusqueda] = useState("");
   const [comunas, setComunas] = useState([]);
-  const [form, setForm] = useState({
-    nombre: "",
-    rut: "",
+  const [form, setForm] = useState({ 
+    nombre: "", 
+    rut: "", 
     comuna: "",
     direccion: "",
     telefono: "",
@@ -36,11 +32,7 @@ export default function Empresas() {
   const [showProductosModal, setShowProductosModal] = useState(false);
   const [currentProductos, setCurrentProductos] = useState([]);
 
-
-  //agrege otro useEffect, const user, useContext y  import { AuthContext } from "../../context/AuthContext", tambien puse un console  log("user:")
-
   useEffect(() => {
-    console.log("user:", user);
     const cargarDatos = async () => {
       try {
         const [empresasData, comunasData] = await Promise.all([
@@ -48,18 +40,14 @@ export default function Empresas() {
           fetchComunas()
         ]);
         setEmpresas(empresasData);
-        setComunas(comunasData);
-
+        
         const productosPorEmpresa = {};
         for (const empresa of empresasData) {
           const productos = await getProductosByEmpresaId(empresa.id);
           productosPorEmpresa[empresa.id] = productos;
-
+          
           if (productos.length > 0 && !empresa.manejaProductos) {
-            await updateEmpresa(empresa.id, {
-              ...empresa,
-              manejaProductos: true,
-            });
+            await updateEmpresa(empresa.id, { ...empresa, manejaProductos: true });
           }
         }
         setProductosData(productosPorEmpresa);
@@ -69,12 +57,8 @@ export default function Empresas() {
         setLoading(false);
       }
     };
-
-    if (user) {
-      cargarDatos(); // ✅ función bien llamada dentro del useEffect
-    }
-  }, [user]); // ✅ dependencia correcta
-
+    cargarDatos();
+  }, []);
 
   const fetchComunas = async () => {
     try {
@@ -95,22 +79,22 @@ export default function Empresas() {
     const rut = empresa.rut ? empresa.rut.toLowerCase() : '';
     const comuna = empresa.comuna ? empresa.comuna.toLowerCase() : '';
     const busquedaLower = busqueda.toLowerCase();
-
-    return nombre.includes(busquedaLower) ||
-      rut.includes(busquedaLower) ||
-      comuna.includes(busquedaLower);
+    
+    return nombre.includes(busquedaLower) || 
+           rut.includes(busquedaLower) || 
+           comuna.includes(busquedaLower);
   });
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-
+    
     // Validaciones de longitud máxima
     if (name === "telefono" && value.length > 9) return;
     if (name === "rut" && value.length > 12) return;
     if (name === "nombre" && value.length > 50) return;
     if (name === "direccion" && value.length > 100) return;
     if (name === "correo" && value.length > 50) return;
-
+    
     setForm(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value
@@ -121,7 +105,7 @@ export default function Empresas() {
     e.preventDefault();
     setError(null);
     setSuccess(null);
-
+    
     // Validaciones de campos obligatorios
     if (!form.nombre.trim() || !form.rut.trim() || !form.comuna.trim()) {
       setError("Nombre, RUT y Comuna son obligatorios");
@@ -143,11 +127,11 @@ export default function Empresas() {
         await addEmpresa(form);
         setSuccess("Empresa creada correctamente");
       }
-
+      
       // Resetear formulario
-      setForm({
-        nombre: "",
-        rut: "",
+      setForm({ 
+        nombre: "", 
+        rut: "", 
         comuna: "",
         direccion: "",
         telefono: "",
@@ -155,7 +139,7 @@ export default function Empresas() {
         manejaProductos: false
       });
       setEditId(null);
-
+      
       // Recargar datos
       await cargarEmpresas();
     } catch (error) {
@@ -168,7 +152,7 @@ export default function Empresas() {
       setLoading(true);
       const data = await getEmpresas();
       setEmpresas(data);
-
+      
       const productosPorEmpresa = {};
       for (const empresa of data) {
         const productos = await getProductosByEmpresaId(empresa.id);
@@ -184,10 +168,10 @@ export default function Empresas() {
 
   const handleEdit = (empresa) => {
     const tieneProductos = productosData[empresa.id] && productosData[empresa.id].length > 0;
-
-    setForm({
-      nombre: empresa.nombre || "",
-      rut: empresa.rut || "",
+    
+    setForm({ 
+      nombre: empresa.nombre || "", 
+      rut: empresa.rut || "", 
       comuna: empresa.comuna || "",
       direccion: empresa.direccion || "",
       telefono: empresa.telefono || "",
@@ -203,9 +187,9 @@ export default function Empresas() {
         await deleteEmpresa(id);
         if (editId === id) {
           setEditId(null);
-          setForm({
-            nombre: "",
-            rut: "",
+          setForm({ 
+            nombre: "", 
+            rut: "", 
             comuna: "",
             direccion: "",
             telefono: "",
@@ -231,7 +215,7 @@ export default function Empresas() {
     setCurrentProductos([]);
   };
 
-  if (!user) return <p>Cargando usuario...</p>;
+  if (loading) return <div className="loading">Cargando empresas...</div>;
 
   return (
     <div className="empresas-container">
@@ -361,9 +345,9 @@ export default function Empresas() {
               className="btn-cancel"
               onClick={() => {
                 setEditId(null);
-                setForm({
-                  nombre: "",
-                  rut: "",
+                setForm({ 
+                  nombre: "", 
+                  rut: "", 
                   comuna: "",
                   direccion: "",
                   telefono: "",
@@ -398,7 +382,7 @@ export default function Empresas() {
                   <td>{empresa.comuna || "-"}</td>
                   <td>
                     {productosData[empresa.id] && productosData[empresa.id].length > 0 ? (
-                      <button
+                      <button 
                         onClick={() => mostrarProductos(empresa.id)}
                         className="productos-button"
                       >
