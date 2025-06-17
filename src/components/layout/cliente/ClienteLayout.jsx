@@ -1,14 +1,21 @@
 // src/components/layout/cliente/ClienteLayout.jsx
-import NavCliente from "./NavCliente";
+import React from "react";
 import { Outlet } from "react-router-dom";
+import NavCliente from "./NavCliente";
+import "../../../pages/admin/AdminLayout.css"; // Reutiliza el mismo CSS que empresa
 
 export default function ClienteLayout() {
     return (
-        <div className="d-flex">
-            <NavCliente />
-            <div className="flex-grow-1 p-3">
+        <div className="admin-layout"> {/* Usa misma clase que empresa */}
+            <aside className="sidebar">
+                <NavCliente />
+            </aside>
+            <main className="main-content">
                 <Outlet />
-            </div>
+            </main>
         </div>
     );
 }
+
+
+

@@ -1,7 +1,7 @@
 // src/components/layout/cliente/NavCliente.jsx
 import { NavLink } from "react-router-dom";
 import CerrarSesion from "../../CerrarSesion";
-import "../../../pages/cliente/ClienteDashboard.css"; // o crea NavCliente.css
+import "../../../pages/admin/AdminDashboard.css"; // o crea NavCliente.css
 
 export default function NavCliente() {
     return (
