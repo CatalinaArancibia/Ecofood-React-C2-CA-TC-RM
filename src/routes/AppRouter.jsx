@@ -22,6 +22,7 @@ import Administradores from "../pages/admin/Administradores";
 import EmpresaDashboard from "../pages/empresa/EmpresaDashboard";
 import ProductosEmpresa from "../pages/empresa/ProductosEmpresa";
 import PerfilEmpresa from "../pages/empresa/PerfilEmpresa";
+import PedidosEmpresa from "../pages/empresa/PedidosEmpresa";
 
 // Cliente
 import ClienteDashboard from "../pages/cliente/ClienteDashboard";
@@ -79,6 +80,7 @@ export default function AppRouter() {
         <Route path="dashboard" element={<EmpresaDashboard />} />
         <Route path="perfil" element={<PerfilEmpresa />} />
         <Route path="productos" element={<ProductosEmpresa />} />
+        <Route path="pedidos" element={<PedidosEmpresa />} />
         <Route path="*" element={<NotFound />} />
       </Route>
 
