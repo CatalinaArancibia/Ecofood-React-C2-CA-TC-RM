@@ -21,6 +21,7 @@ export default function PedidosCliente() {
   const [limite, setLimite] = useState(5);
   const [paginaActual, setPaginaActual] = useState(1);
   const [scrollY, setScrollY] = useState(0);
+  const [filtroEstado, setFiltroEstado] = useState("");
 
   useEffect(() => {
     const fetchPedidos = async () => {
@@ -97,12 +98,16 @@ export default function PedidosCliente() {
     }
   };
 
-  const pedidosFiltrados = pedidos.filter((pedido) =>
-    pedido.productos.some((prod) =>
+  const pedidosFiltrados = pedidos.filter((pedido) => {
+    const coincideBusqueda = pedido.productos.some((prod) =>
       prod.nombreProducto.toLowerCase().includes(busqueda.toLowerCase()) ||
       prod.nombreEmpresa.toLowerCase().includes(busqueda.toLowerCase())
-    )
-  );
+    );
+
+    const coincideEstado = filtroEstado ? pedido.estado === filtroEstado : true;
+
+    return coincideBusqueda && coincideEstado;
+  });
 
   const pedidosOrdenados = [...pedidosFiltrados].sort((a, b) => {
     if (orden === "reciente") return b.fecha - a.fecha;
@@ -120,7 +125,7 @@ export default function PedidosCliente() {
       <h3 className="mb-4">🧾 Mis pedidos</h3>
 
       <div className="row mb-3 align-items-end">
-        <div className="col-md-4">
+        <div className="col-md-3">
           <label>Buscar por producto o empresa</label>
           <input
             type="text"
@@ -134,7 +139,25 @@ export default function PedidosCliente() {
           />
         </div>
 
-        <div className="col-md-4">
+        <div className="col-md-3">
+          <label>Filtrar por estado</label>
+          <select
+            className="form-select"
+            value={filtroEstado}
+            onChange={(e) => {
+              setFiltroEstado(e.target.value);
+              setPaginaActual(1);
+            }}
+          >
+            <option value="">Todos</option>
+            <option value="pendiente">Pendiente</option>
+            <option value="en_proceso">En proceso</option>
+            <option value="cancelado">Cancelado</option>
+            <option value="completado">Completado</option>
+          </select>
+        </div>
+
+        <div className="col-md-3">
           <label>Ordenar por</label>
           <select
             className="form-select"
@@ -147,7 +170,7 @@ export default function PedidosCliente() {
           </select>
         </div>
 
-        <div className="col-md-4">
+        <div className="col-md-3">
           <label>Pedidos por página</label>
           <select
             className="form-select"
@@ -227,5 +250,8 @@ export default function PedidosCliente() {
     </div>
   );
 }
+
+
+
 
 

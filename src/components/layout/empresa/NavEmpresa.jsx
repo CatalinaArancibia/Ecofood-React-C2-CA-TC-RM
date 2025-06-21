@@ -23,21 +23,30 @@ export default function NavEmpresa() {
                 </NavLink>
 
                 <NavLink
-                    to="/empresa/perfil"
-                    className={({ isActive }) =>
-                        isActive ? "nav-admin-link active" : "nav-admin-link"
-                    }
-                >
-                    Perfil
-                </NavLink>
-
-                <NavLink
                     to="/empresa/productos"
                     className={({ isActive }) =>
                         isActive ? "nav-admin-link active" : "nav-admin-link"
                     }
                 >
                     Productos
+                </NavLink>
+
+                <NavLink
+                    to="/empresa/pedidos"
+                    className={({ isActive }) =>
+                        isActive ? "nav-admin-link active" : "nav-admin-link"
+                    }
+                >
+                    Pedidos
+                </NavLink>                
+
+                <NavLink
+                    to="/empresa/perfil"
+                    className={({ isActive }) =>
+                        isActive ? "nav-admin-link active" : "nav-admin-link"
+                    }
+                >
+                    Perfil
                 </NavLink>
             </div>
 
