@@ -3,9 +3,7 @@ import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "../../services/firebase";
 import { useAuth } from "../../context/AuthContext";
 import Swal from "sweetalert2";
-import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from "firebase/auth";
-import { getAuth } from "firebase/auth";
-
+import CambiarContrasenaModal from "../../components/CambiarContrasenaModal";
 
 export default function PerfilCliente() {
   const { user } = useAuth();
@@ -19,11 +17,6 @@ export default function PerfilCliente() {
   const [comunas, setComunas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [mostrarModalPassword, setMostrarModalPassword] = useState(false);
-  const [passwordForm, setPasswordForm] = useState({
-    actual: "",
-    nueva: "",
-    repetir: "",
-  });
 
   // Cargar perfil
   const cargarDatos = async () => {
@@ -103,38 +96,6 @@ export default function PerfilCliente() {
     }
   };
 
-  const handlePasswordChange = async () => {
-    const { actual, nueva, repetir } = passwordForm;
-    const auth = getAuth();
-    const firebaseUser = auth.currentUser;
-
-    if (!actual || !nueva || !repetir) {
-      return Swal.fire("Error", "Todos los campos son obligatorios", "warning");
-    }
-
-    if (nueva !== repetir) {
-      return Swal.fire("Error", "Las nuevas contraseñas no coinciden", "warning");
-    }
-
-    if (nueva.length < 6) {
-      return Swal.fire("Error", "La nueva contraseña debe tener al menos 6 caracteres", "warning");
-    }
-
-    try {
-      const credential = EmailAuthProvider.credential(firebaseUser.email, actual);
-      await reauthenticateWithCredential(firebaseUser, credential);
-      await updatePassword(firebaseUser, nueva);
-
-      Swal.fire("Éxito", "Contraseña actualizada correctamente", "success");
-      setMostrarModalPassword(false);
-      setPasswordForm({ actual: "", nueva: "", repetir: "" });
-    } catch (error) {
-      console.error("Error al cambiar contraseña:", error);
-      Swal.fire("Error", "La contraseña actual es incorrecta o el cambio falló", "error");
-    }
-  };
-
-
   if (loading) return <p>Cargando perfil...</p>;
 
   return (
@@ -143,7 +104,13 @@ export default function PerfilCliente() {
       <div className="row mt-4">
         <div className="col-md-6 mb-3">
           <label className="form-label">Nombre</label>
-          <input type="text" className="form-control" name="nombre" value={formData.nombre} onChange={handleChange} />
+          <input
+            type="text"
+            className="form-control"
+            name="nombre"
+            value={formData.nombre}
+            onChange={handleChange}
+          />
         </div>
 
         <div className="col-md-6 mb-3">
@@ -153,70 +120,46 @@ export default function PerfilCliente() {
 
         <div className="col-md-6 mb-3">
           <label className="form-label">Comuna</label>
-          <select className="form-select" name="comuna" value={formData.comuna} onChange={handleChange}>
+          <select
+            className="form-select"
+            name="comuna"
+            value={formData.comuna}
+            onChange={handleChange}
+          >
             <option value="">Seleccione una comuna</option>
             {comunas.map((c, i) => (
-              <option key={i} value={c}>{c}</option>
+              <option key={i} value={c}>
+                {c}
+              </option>
             ))}
           </select>
         </div>
 
         <div className="col-md-6 mb-3">
           <label className="form-label">Dirección</label>
-          <input type="text" className="form-control" name="direccion" value={formData.direccion} onChange={handleChange} />
+          <input
+            type="text"
+            className="form-control"
+            name="direccion"
+            value={formData.direccion}
+            onChange={handleChange}
+          />
         </div>
       </div>
 
       <button className="btn btn-success me-2" onClick={guardarCambios}>
         Guardar Cambios
       </button>
-      <button className="btn btn-outline-primary" onClick={() => setMostrarModalPassword(true)}>
+      <button
+        className="btn btn-outline-primary"
+        onClick={() => setMostrarModalPassword(true)}
+      >
         Cambiar contraseña 🔒
       </button>
 
-      {/* Modal contraseña */}
+      {/* Modal estructurado con Bootstrap */}
       {mostrarModalPassword && (
-        <div
-          style={{
-            position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
-            background: "rgba(0,0,0,0.4)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 9999
-          }}
-        >
-          <div className="bg-white p-4 rounded shadow" style={{ minWidth: "300px" }}>
-            <h5>Cambiar contraseña</h5>
-            <div className="mb-2">
-              <label>Contraseña actual</label>
-              <input
-                type="password"
-                className="form-control"
-                value={passwordForm.actual}
-                onChange={(e) => setPasswordForm({ ...passwordForm, actual: e.target.value })}
-              />
-            </div>
-            <div className="mb-2">
-              <label>Nueva contraseña</label>
-              <input
-                type="password"
-                className="form-control"
-                value={passwordForm.nueva}
-                onChange={(e) => setPasswordForm({ ...passwordForm, nueva: e.target.value })}
-              />
-            </div>
-            <div className="mb-3">
-              <label>Repetir nueva contraseña</label>
-              <input
-                type="password"
-                className="form-control"
-                value={passwordForm.repetir}
-                onChange={(e) => setPasswordForm({ ...passwordForm, repetir: e.target.value })}
-              />
-            </div>
-            <div className="d-flex justify-content-between">
-              <button className="btn btn-secondary" onClick={() => setMostrarModalPassword(false)}>Cancelar</button>
-              <button className="btn btn-primary" onClick={handlePasswordChange}>Guardar</button>
-            </div>
-          </div>
-        </div>
+        <CambiarContrasenaModal onClose={() => setMostrarModalPassword(false)} />
       )}
     </div>
   );
