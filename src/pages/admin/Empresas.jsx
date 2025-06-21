@@ -1,461 +1,249 @@
+/* Registro de empresas (admin) */
+
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import {
   getEmpresas,
-  addEmpresa,
+  addEmpresa,       //  <-- ahora recibe (uid, datos)
   updateEmpresa,
-  deleteEmpresa,
-  getProductosByEmpresaId
+  deleteEmpresa
 } from "../../services/empresaService";
-import { doc, getDoc } from "firebase/firestore";
-import { db } from "../../services/firebase";
-import './Empresas.css';
+import { doc, getDoc }         from "firebase/firestore";
+import { db, firebaseConfig }  from "../../services/firebase";
+import { initializeApp, deleteApp } from "firebase/app";
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  sendEmailVerification,
+  signOut
+} from "firebase/auth";
+import "./Empresas.css";
 
+/* ─────────────────────────────────────────────────────────────────── */
 export default function Empresas() {
+  /* estado */
   const [empresas, setEmpresas] = useState([]);
+  const [comunas,  setComunas]  = useState([]);
   const [busqueda, setBusqueda] = useState("");
-  const [comunas, setComunas] = useState([]);
-  const [form, setForm] = useState({ 
-    nombre: "", 
-    rut: "", 
-    comuna: "",
-    direccion: "",
-    telefono: "",
-    correo: "",
-    manejaProductos: false
+  const [loading,  setLoading]  = useState(true);
+  const [error,    setError]    = useState(null);
+  const [success,  setSuccess]  = useState(null);
+  const [editId,   setEditId]   = useState(null);
+
+  const [form, setForm] = useState({
+    nombre:"", rut:"", comuna:"", direccion:"",
+    telefono:"", email:"", password:"", tipo:"empresa"
   });
-  const [editId, setEditId] = useState(null);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
-  const [productosData, setProductosData] = useState({});
-  const [loading, setLoading] = useState(true);
-  const [showProductosModal, setShowProductosModal] = useState(false);
-  const [currentProductos, setCurrentProductos] = useState([]);
 
-  useEffect(() => {
-    const cargarDatos = async () => {
-      try {
-        const [empresasData, comunasData] = await Promise.all([
-          getEmpresas(),
-          fetchComunas()
-        ]);
-        setEmpresas(empresasData);
-        
-        const productosPorEmpresa = {};
-        for (const empresa of empresasData) {
-          const productos = await getProductosByEmpresaId(empresa.id);
-          productosPorEmpresa[empresa.id] = productos;
-          
-          if (productos.length > 0 && !empresa.manejaProductos) {
-            await updateEmpresa(empresa.id, { ...empresa, manejaProductos: true });
-          }
-        }
-        setProductosData(productosPorEmpresa);
-      } catch (error) {
-        setError(error.message || "Error al cargar datos");
-      } finally {
-        setLoading(false);
-      }
-    };
-    cargarDatos();
-  }, []);
+  /* carga inicial */
+  useEffect(() => { cargarTodo(); }, []);
 
-  const fetchComunas = async () => {
+  const cargarTodo = async () => {
     try {
-      const docRef = doc(db, "config", "comuna");
-      const docSnap = await getDoc(docRef);
-      const comunasList = docSnap.exists() ? docSnap.data().lista : [];
-      setComunas(comunasList);
-      return comunasList;
-    } catch (error) {
-      console.error("Error al obtener las comunas:", error);
-      setError("Error al cargar comunas");
-      return [];
-    }
+      setLoading(true);
+      const [users] = await Promise.all([ getEmpresas(), cargarComunas() ]);
+      setEmpresas(users.filter(u => u.tipo === "empresa"));
+    } catch (e) { setError(e.message); }
+    finally      { setLoading(false); }
   };
 
-  const empresasFiltradas = empresas.filter((empresa) => {
-    const nombre = empresa.nombre ? empresa.nombre.toLowerCase() : '';
-    const rut = empresa.rut ? empresa.rut.toLowerCase() : '';
-    const comuna = empresa.comuna ? empresa.comuna.toLowerCase() : '';
-    const busquedaLower = busqueda.toLowerCase();
-    
-    return nombre.includes(busquedaLower) || 
-           rut.includes(busquedaLower) || 
-           comuna.includes(busquedaLower);
+  const cargarComunas = async () => {
+    const snap = await getDoc(doc(db, "config", "comuna"));
+    const lista = snap.exists() ? snap.data().lista : [];
+    setComunas(lista);
+    return lista;
+  };
+
+  /* helpers */
+  const handleChange = ({target}) =>
+    setForm(prev => ({ ...prev, [target.name]: target.value }));
+
+  const limpiar = () => setForm({
+    nombre:"", rut:"", comuna:"", direccion:"",
+    telefono:"", email:"", password:"", tipo:"empresa"
   });
 
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    
-    // Validaciones de longitud máxima
-    if (name === "telefono" && value.length > 9) return;
-    if (name === "rut" && value.length > 12) return;
-    if (name === "nombre" && value.length > 50) return;
-    if (name === "direccion" && value.length > 100) return;
-    if (name === "correo" && value.length > 50) return;
-    
-    setForm(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }));
-  };
-
+  /* guardar / crear */
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(null);
-    setSuccess(null);
-    
-    // Validaciones de campos obligatorios
-    if (!form.nombre.trim() || !form.rut.trim() || !form.comuna.trim()) {
-      setError("Nombre, RUT y Comuna son obligatorios");
+    setError(null); setSuccess(null);
+
+    /* validaciones básicas */
+    if (!form.nombre || !form.rut || !form.comuna || !form.email) {
+      setError("Nombre, RUT, comuna y email son obligatorios");
+      return;
+    }
+    if (!editId && form.password.length < 6) {
+      setError("Contraseña ≥ 6 caracteres");
+      return;
+    }
+    if (!/^\d{7,8}-[\dkK]$/.test(form.rut)) {
+      setError("RUT inválido (ej. 12345678-9)");
       return;
     }
 
-    // Validación de RUT con expresión regular simple
-    const rutRegex = /^\d{7,8}-[\dkK]$/;
-    if (!rutRegex.test(form.rut)) {
-      setError("El RUT debe tener formato 12345678-9");
-      return;
-    }
+    /* datos que SÍ se guardan */
+    const datosEmpresa = {
+      nombre:     form.nombre,
+      rut:        form.rut,
+      comuna:     form.comuna,
+      direccion:  form.direccion,
+      telefono:   form.telefono,
+      email:      form.email,
+      tipo:       "empresa",
+      ubicacion:  `${form.comuna}, ${form.direccion}`
+    };
 
     try {
       if (editId) {
-        await updateEmpresa(editId, form);
-        setSuccess("Empresa actualizada correctamente");
+        await updateEmpresa(editId, datosEmpresa);
+        setSuccess("Empresa actualizada");
       } else {
-        await addEmpresa(form);
-        setSuccess("Empresa creada correctamente");
+        /* ① crear Auth en app secundaria */
+        const secApp  = initializeApp(firebaseConfig, "secondary");
+        const secAuth = getAuth(secApp);
+
+        const cred = await createUserWithEmailAndPassword(
+          secAuth, form.email, form.password
+        );
+        await sendEmailVerification(cred.user);
+
+        /* ② guardar en Firestore usando el MISMO uid */
+        await addEmpresa(cred.user.uid, datosEmpresa);
+
+        /* ③ cerrar sesión secundaria y borrar app */
+        await signOut(secAuth);
+        await deleteApp(secApp);
+
+        setSuccess("Empresa creada y correo de verificación enviado");
       }
-      
-      // Resetear formulario
-      setForm({ 
-        nombre: "", 
-        rut: "", 
-        comuna: "",
-        direccion: "",
-        telefono: "",
-        correo: "",
-        manejaProductos: false
-      });
-      setEditId(null);
-      
-      // Recargar datos
-      await cargarEmpresas();
-    } catch (error) {
-      setError(error.message || "Error al guardar la empresa");
-    }
+
+      limpiar(); setEditId(null); cargarTodo();
+    } catch (e) { setError(e.message); }
   };
 
-  const cargarEmpresas = async () => {
-    try {
-      setLoading(true);
-      const data = await getEmpresas();
-      setEmpresas(data);
-      
-      const productosPorEmpresa = {};
-      for (const empresa of data) {
-        const productos = await getProductosByEmpresaId(empresa.id);
-        productosPorEmpresa[empresa.id] = productos;
-      }
-      setProductosData(productosPorEmpresa);
-    } catch (error) {
-      setError(error.message || "Error al cargar empresas");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleEdit = (empresa) => {
-    const tieneProductos = productosData[empresa.id] && productosData[empresa.id].length > 0;
-    
-    setForm({ 
-      nombre: empresa.nombre || "", 
-      rut: empresa.rut || "", 
-      comuna: empresa.comuna || "",
-      direccion: empresa.direccion || "",
-      telefono: empresa.telefono || "",
-      correo: empresa.correo || "",
-      manejaProductos: tieneProductos || empresa.manejaProductos || false
+  const handleEdit = (emp) => {
+    setForm({
+      nombre:emp.nombre, rut:emp.rut, comuna:emp.comuna,
+      direccion:emp.direccion, telefono:emp.telefono,
+      email:emp.email, password:"", tipo:"empresa"
     });
-    setEditId(empresa.id);
+    setEditId(emp.id);
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm("¿Estás seguro de eliminar esta empresa?")) {
-      try {
-        await deleteEmpresa(id);
-        if (editId === id) {
-          setEditId(null);
-          setForm({ 
-            nombre: "", 
-            rut: "", 
-            comuna: "",
-            direccion: "",
-            telefono: "",
-            correo: "",
-            manejaProductos: false
-          });
-        }
-        setSuccess("Empresa eliminada correctamente");
-        await cargarEmpresas();
-      } catch (error) {
-        setError(error.message || "Error al eliminar la empresa");
-      }
-    }
+    if (!window.confirm("¿Eliminar empresa?")) return;
+    try { await deleteEmpresa(id); setSuccess("Eliminada"); cargarTodo(); }
+    catch { setError("Error al eliminar"); }
   };
 
-  const mostrarProductos = (empresaId) => {
-    setCurrentProductos(productosData[empresaId] || []);
-    setShowProductosModal(true);
-  };
+  /* render */
+  if (loading) return <div className="loading">Cargando empresas…</div>;
 
-  const closeModal = () => {
-    setShowProductosModal(false);
-    setCurrentProductos([]);
-  };
-
-  if (loading) return <div className="loading">Cargando empresas...</div>;
+  const lista = empresas.filter(e =>
+    e.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
+    e.comuna.toLowerCase().includes(busqueda.toLowerCase())
+  );
 
   return (
     <div className="empresas-container">
       <h2>Gestión de Empresas</h2>
 
       <input
-        type="text"
-        placeholder="Buscar por nombre, RUT o comuna"
         className="busqueda-empresa-input"
+        placeholder="Buscar por nombre o comuna"
         value={busqueda}
-        onChange={(e) => setBusqueda(e.target.value)}
-        maxLength="50"
+        onChange={e=>setBusqueda(e.target.value)}
       />
 
-      {error && <div className="alert alert-danger">{error}</div>}
+      {error   && <div className="alert alert-danger">{error}</div>}
       {success && <div className="alert alert-success">{success}</div>}
 
+      {/* formulario */}
       <form onSubmit={handleSubmit} className="empresa-form">
-        <h3>{editId ? "Editando Empresa" : "Nueva Empresa"}</h3>
+        <h3>{editId ? "Editar Empresa" : "Nueva Empresa"}</h3>
 
         <div className="form-row">
           <div className="form-group">
-            <label>Nombre de la empresa*</label>
-            <input
-              type="text"
-              name="nombre"
-              value={form.nombre}
-              onChange={handleChange}
-              required
-              minLength="3"
-              maxLength="50"
-            />
+            <label>Nombre*</label>
+            <input name="nombre" value={form.nombre} onChange={handleChange} required />
           </div>
-
           <div className="form-group">
-            <label>RUT* (Ej: 12345678-9)</label>
-            <input
-              type="text"
-              name="rut"
-              value={form.rut}
-              onChange={handleChange}
-              required
-              minLength="9"
-              maxLength="12"
-            />
-          </div>
-        </div>
-
-        <div className="form-row">
-          <div className="form-group">
-            <label>Dirección</label>
-            <input
-              type="text"
-              name="direccion"
-              value={form.direccion}
-              onChange={handleChange}
-              maxLength="100"
-            />
-          </div>
-
-          <div className="form-group">
-            <label>Teléfono</label>
-            <input
-              type="tel"
-              name="telefono"
-              value={form.telefono}
-              onChange={handleChange}
-              minLength="8"
-              maxLength="15"
-            />
+            <label>RUT*</label>
+            <input name="rut" value={form.rut} onChange={handleChange} required />
           </div>
         </div>
 
         <div className="form-row">
           <div className="form-group">
             <label>Comuna*</label>
-            <select
-              name="comuna"
-              value={form.comuna}
-              onChange={handleChange}
-              required
-            >
+            <select name="comuna" value={form.comuna} onChange={handleChange} required>
               <option value="">-- Seleccione comuna --</option>
-              {comunas.map((comuna, index) => (
-                <option key={index} value={comuna}>
-                  {comuna}
-                </option>
-              ))}
+              {comunas.map((c,i)=><option key={i} value={c}>{c}</option>)}
             </select>
           </div>
-
           <div className="form-group">
-            <label>Correo electrónico</label>
-            <input
-              type="email"
-              name="correo"
-              value={form.correo}
-              onChange={handleChange}
-              maxLength="50"
-            />
+            <label>Dirección</label>
+            <input name="direccion" value={form.direccion} onChange={handleChange}/>
           </div>
         </div>
 
-        <div className="form-group">
-          <label className="checkbox-label">
-            <input
-              type="checkbox"
-              name="manejaProductos"
-              checked={form.manejaProductos}
-              onChange={handleChange}
-              disabled={productosData[editId] && productosData[editId].length > 0}
-            />
-            Maneja productos
-            {productosData[editId] && productosData[editId].length > 0 && (
-              <span className="checkbox-hint"> (Tiene productos registrados)</span>
-            )}
-          </label>
+        <div className="form-row">
+          <div className="form-group">
+            <label>Teléfono</label>
+            <input name="telefono" value={form.telefono} onChange={handleChange}/>
+          </div>
+          <div className="form-group">
+            <label>Email*</label>
+            <input name="email" type="email" value={form.email} onChange={handleChange} required/>
+          </div>
         </div>
 
+        {!editId && (
+          <div className="form-row">
+            <div className="form-group">
+              <label>Contraseña inicial*</label>
+              <input
+                name="password"
+                type="password"
+                value={form.password}
+                onChange={handleChange}
+                required
+                minLength={6}
+              />
+            </div>
+          </div>
+        )}
+
         <div className="form-actions">
-          <button type="submit" className="btn-submit">
-            {editId ? "Actualizar Empresa" : "Agregar Empresa"}
-          </button>
+          <button className="btn-submit">{editId ? "Actualizar" : "Agregar"}</button>
           {editId && (
-            <button
-              type="button"
-              className="btn-cancel"
-              onClick={() => {
-                setEditId(null);
-                setForm({ 
-                  nombre: "", 
-                  rut: "", 
-                  comuna: "",
-                  direccion: "",
-                  telefono: "",
-                  correo: "",
-                  manejaProductos: false
-                });
-              }}
-            >
+            <button type="button" className="btn-cancel" onClick={()=>{ setEditId(null); limpiar(); }}>
               Cancelar
             </button>
           )}
         </div>
       </form>
 
+      {/* tabla */}
       <div className="table-responsive">
         <table className="empresas-table">
           <thead>
-            <tr>
-              <th>Nombre</th>
-              <th>RUT</th>
-              <th>Comuna</th>
-              <th>Productos</th>
-              <th>Acciones</th>
-            </tr>
+            <tr><th>Nombre</th><th>RUT</th><th>Comuna</th><th>Email</th><th>Acciones</th></tr>
           </thead>
           <tbody>
-            {empresasFiltradas.length > 0 ? (
-              empresasFiltradas.map((empresa) => (
-                <tr key={empresa.id}>
-                  <td>{empresa.nombre}</td>
-                  <td>{empresa.rut}</td>
-                  <td>{empresa.comuna || "-"}</td>
-                  <td>
-                    {productosData[empresa.id] && productosData[empresa.id].length > 0 ? (
-                      <button 
-                        onClick={() => mostrarProductos(empresa.id)}
-                        className="productos-button"
-                      >
-                        Ver {productosData[empresa.id].length} productos
-                      </button>
-                    ) : (
-                      <span className="no-productos">No maneja</span>
-                    )}
-                  </td>
-                  <td>
-                    <button
-                      onClick={() => handleEdit(empresa)}
-                      className="btn-editar"
-                    >
-                      Editar
-                    </button>
-                    <button
-                      onClick={() => handleDelete(empresa.id)}
-                      className="btn-eliminar"
-                    >
-                      Eliminar
-                    </button>
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="5">No se encontraron empresas</td>
+            {lista.length ? lista.map(emp=>(
+              <tr key={emp.id}>
+                <td>{emp.nombre}</td><td>{emp.rut}</td><td>{emp.comuna}</td><td>{emp.email}</td>
+                <td>
+                  <button className="btn-editar"   onClick={()=>handleEdit(emp)}>Editar</button>
+                  <button className="btn-eliminar" onClick={()=>handleDelete(emp.id)}>Eliminar</button>
+                </td>
               </tr>
-            )}
+            )) : <tr><td colSpan="5">No se encontraron empresas</td></tr>}
           </tbody>
         </table>
       </div>
-
-      {showProductosModal && (
-        <div className="modal-overlay">
-          <div className="modal-container">
-            <div className="modal-header">
-              <h3>Productos y Stock</h3>
-              <button onClick={closeModal} className="modal-close">&times;</button>
-            </div>
-            <div className="modal-body">
-              {currentProductos.length > 0 ? (
-                <table className="productos-table">
-                  <thead>
-                    <tr>
-                      <th>Producto</th>
-                      <th>Stock</th>
-                      <th>Precio</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {currentProductos.map((producto, index) => (
-                      <tr key={index}>
-                        <td>{producto.nombre}</td>
-                        <td>{producto.stock || 0}</td>
-                        <td>${producto.precio?.toLocaleString() || "0"}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              ) : (
-                <p>No hay productos registrados</p>
-              )}
-            </div>
-            <div className="modal-footer">
-              <button onClick={closeModal} className="btn-cerrar">
-                Cerrar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
+

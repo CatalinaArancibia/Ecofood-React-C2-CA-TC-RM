@@ -1,162 +1,118 @@
 import { db } from "./firebase";
-import { 
-  collection, getDocs, addDoc, updateDoc, deleteDoc, 
+import {
+  collection, getDocs, setDoc, updateDoc, deleteDoc,
   doc, query, where, arrayUnion, arrayRemove, getDoc,
   writeBatch, serverTimestamp
 } from "firebase/firestore";
 
+/* Todas las empresas residen en la colección ‘usuarios’ */
 const empresasCol = collection(db, "usuarios");
 
+/* ──────────────────────────── Lectura ──────────────────────────── */
 export const getEmpresas = async () => {
-  try {
-    const snapshot = await getDocs(empresasCol);
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-  } catch (error) {
-    console.error("Error al obtener empresas:", error);
-    throw new Error("Error al cargar las empresas");
-  }
+  const snap = await getDocs(empresasCol);
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
 };
 
 export const getEmpresaById = async (id) => {
-  try {
-    const docRef = doc(db, "usuarios", id);
-    const docSnap = await getDoc(docRef);
-    if (!docSnap.exists()) throw new Error("Empresa no encontrada");
-    return { id: docSnap.id, ...docSnap.data() };
-  } catch (error) {
-    console.error("Error al obtener empresa:", error);
-    throw error;
-  }
+  const ref = doc(db, "usuarios", id);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) throw new Error("Empresa no encontrada");
+  return { id: snap.id, ...snap.data() };
 };
 
-export const addEmpresa = async (empresaData) => {
-  try {
-    // Validar RUT único
-    const q = query(empresasCol, where("rut", "==", empresaData.rut));
-    const snapshot = await getDocs(q);
-    
-    if (!snapshot.empty) {
-      throw new Error("Ya existe una empresa con este RUT");
-    }
-
-    const docRef = await addDoc(empresasCol, {
-      ...empresaData,
-      productos: empresaData.manejaProductos ? [] : null,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
-    });
-    
-    return { id: docRef.id, ...empresaData };
-  } catch (error) {
-    console.error("Error al crear empresa:", error);
-    throw error;
+/* ──────────────────────────── Crear ──────────────────────────── */
+/**
+ * Crea un documento con el mismo UID que devuelve Firebase Auth.
+ * @param {string} uid   UID del usuario recién creado en Auth
+ * @param {object} data  Datos de la empresa (nombre, rut, etc.)
+ */
+export const addEmpresa = async (uid, data) => {
+  /* Validar RUT único */
+  const q = query(empresasCol, where("rut", "==", data.rut));
+  if (!(await getDocs(q)).empty) {
+    throw new Error("Ya existe una empresa con este RUT");
   }
+
+  await setDoc(doc(db, "usuarios", uid), {
+    ...data,                 // NO se guarda idAuth
+    productos: [],           // siempre array
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp()
+  });
+
+  return uid;                // devolvemos el mismo UID
 };
 
-export const updateEmpresa = async (id, empresaData) => {
-  try {
-    const empresaRef = doc(db, "usuarios", id);
-    await updateDoc(empresaRef, {
-      ...empresaData,
-      updatedAt: serverTimestamp()
-    });
-    return id;
-  } catch (error) {
-    console.error("Error al actualizar empresa:", error);
-    throw error;
-  }
+/* ──────────────────────────── Actualizar ──────────────────────────── */
+export const updateEmpresa = async (id, data) => {
+  await updateDoc(doc(db, "usuarios", id), {
+    ...data,
+    updatedAt: serverTimestamp()
+  });
+  return id;
 };
 
+/* ──────────────────────────── Eliminar ──────────────────────────── */
 export const deleteEmpresa = async (id) => {
-  try {
-    // Primero eliminamos las referencias en los productos
-    const empresa = await getEmpresaById(id);
-    if (empresa.productos && empresa.productos.length > 0) {
-      const batch = writeBatch(db);
-      
-      for (const productoId of empresa.productos) {
-        const productoRef = doc(db, "productos", productoId);
-        batch.update(productoRef, {
-          empresas: arrayRemove(id),
-          updatedAt: serverTimestamp()
-        });
-      }
-      
-      await batch.commit();
-    }
-    
-    // Luego eliminamos la empresa
-    await deleteDoc(doc(db, "usuarios", id));
-  } catch (error) {
-    console.error("Error al eliminar empresa:", error);
-    throw error;
-  }
-};
-
-export const getProductosByEmpresaId = async (empresaId) => {
-  try {
-    const empresa = await getEmpresaById(empresaId);
-    if (!empresa.productos || empresa.productos.length === 0) return [];
-    
-    const productosPromises = empresa.productos.map(async productoId => {
-      const productoDoc = await getDoc(doc(db, "productos", productoId));
-      return productoDoc.exists() ? { id: productoDoc.id, ...productoDoc.data() } : null;
+  /* 1. Quitar referencias en productos */
+  const empresa = await getEmpresaById(id);
+  if (empresa.productos?.length) {
+    const batch = writeBatch(db);
+    empresa.productos.forEach(pid => {
+      batch.update(doc(db, "productos", pid), {
+        empresas: arrayRemove(id),
+        updatedAt: serverTimestamp()
+      });
     });
-    
-    const productos = await Promise.all(productosPromises);
-    return productos.filter(p => p !== null);
-  } catch (error) {
-    console.error("Error al obtener productos por empresa:", error);
-    throw error;
+    await batch.commit();
   }
+  /* 2. Borrar la empresa */
+  await deleteDoc(doc(db, "usuarios", id));
 };
 
+/* ──────────────────────────── Productos por empresa ──────────────────────────── */
+export const getProductosByEmpresaId = async (empresaId) => {
+  const empresa = await getEmpresaById(empresaId);
+  if (!empresa.productos?.length) return [];
+
+  const promesas = empresa.productos.map(async pid => {
+    const snap = await getDoc(doc(db, "productos", pid));
+    return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+  });
+
+  return (await Promise.all(promesas)).filter(Boolean);
+};
+
+/* ──────────────────────────── Relacionar producto <-> empresa ──────────────────────────── */
 export const addProductoToEmpresa = async (empresaId, productoId) => {
   const batch = writeBatch(db);
-  
-  // Agregar producto a la empresa
-  const empresaRef = doc(db, "usuarios", empresaId);
-  batch.update(empresaRef, {
+
+  batch.update(doc(db, "usuarios", empresaId), {
     productos: arrayUnion(productoId),
     updatedAt: serverTimestamp()
   });
-  
-  // Agregar empresa al producto
-  const productoRef = doc(db, "productos", productoId);
-  batch.update(productoRef, {
+
+  batch.update(doc(db, "productos", productoId), {
     empresas: arrayUnion(empresaId),
     updatedAt: serverTimestamp()
   });
-  
-  try {
-    await batch.commit();
-  } catch (error) {
-    console.error("Error al relacionar producto con empresa:", error);
-    throw error;
-  }
+
+  await batch.commit();
 };
 
 export const removeProductoFromEmpresa = async (empresaId, productoId) => {
   const batch = writeBatch(db);
-  
-  // Remover producto de la empresa
-  const empresaRef = doc(db, "usuarios", empresaId);
-  batch.update(empresaRef, {
+
+  batch.update(doc(db, "usuarios", empresaId), {
     productos: arrayRemove(productoId),
     updatedAt: serverTimestamp()
   });
-  
-  // Remover empresa del producto
-  const productoRef = doc(db, "productos", productoId);
-  batch.update(productoRef, {
+
+  batch.update(doc(db, "productos", productoId), {
     empresas: arrayRemove(empresaId),
     updatedAt: serverTimestamp()
   });
-  
-  try {
-    await batch.commit();
-  } catch (error) {
-    console.error("Error al desvincular producto de empresa:", error);
-    throw error;
-  }
+
+  await batch.commit();
 };

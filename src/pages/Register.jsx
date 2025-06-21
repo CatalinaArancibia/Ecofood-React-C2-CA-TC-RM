@@ -21,7 +21,7 @@ export default function Register() {
   const [comuna, setComuna] = useState("");
   const [telefono, setTelefono] = useState("");
   const [comunas, setComunas] = useState([]); // Estado para almacenar las comunas
-  const tipo = "empresa"; // Tipo de usuario fijo como "Cliente"
+  const tipo = "cliente"; // Tipo de usuario fijo como "Cliente"
   const navigate = useNavigate();
 
   // Firestore instance
@@ -59,7 +59,9 @@ export default function Register() {
         telefono,
         tipo,
         email,
+        ubicacion: `${comuna}, ${direccion}`
       });
+
 
       // Enviar correo de verificación
       await sendEmailVerification(cred.user);
