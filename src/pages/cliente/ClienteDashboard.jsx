@@ -1,25 +1,8 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext";
-import Swal from "sweetalert2";
 import "../admin/AdminDashboard.css";
 
 export default function ClienteDashboard() {
-  const { user } = useAuth();
-
-  useEffect(() => {
-    if (user) {
-      Swal.fire({
-        title: `¡Bienvenido, ${user.displayName || user.nombre || 'cliente'}!`,
-        text: "Nos alegra verte de nuevo.",
-        icon: "success",
-        confirmButtonText: "Continuar",
-        timer: 3000,
-        timerProgressBar: true
-      });
-    }
-  }, [user]);
-
   return (
     <div className="admin-dashboard">
       <h1>Panel del Cliente</h1>
@@ -61,3 +44,4 @@ export default function ClienteDashboard() {
     </div>
   );
 }
+
