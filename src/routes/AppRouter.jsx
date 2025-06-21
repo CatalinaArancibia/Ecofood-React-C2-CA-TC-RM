@@ -3,38 +3,53 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import Login from "../pages/Login";
 import Register from "../pages/Register";
 import Home from "../pages/Home";
-import ProtectedRoute from "./ProtectedRoute";
-import ClienteDashboard from "../pages/cliente/ClienteDashboard";
-import AdminDashboard from "../pages/admin/AdminDashboard";
-import AdminLayout from "../components/layout/admin/AdminLayout";
 import NotFound from "../pages/NotFound";
-import EmpresaDashboard from "../pages/empresa/EmpresaDashboard";
-import ProductosEmpresa from "../pages/empresa/ProductosEmpresa";
-import PerfilEmpresa from "../pages/empresa/PerfilEmpresa";
 
+import ProtectedRoute from "./ProtectedRoute";
+
+import AdminLayout from "../components/layout/admin/AdminLayout";
+import EmpresaLayout from "../components/layout/empresa/EmpresaLayout";
+import ClienteLayout from "../components/layout/cliente/ClienteLayout"; // <-- IMPORTANTE
+
+// Admin
+import AdminDashboard from "../pages/admin/AdminDashboard";
 import Empresas from "../pages/admin/Empresas";
 import Clientes from "../pages/admin/Clientes";
 import Productos from "../pages/admin/Productos";
 import Administradores from "../pages/admin/Administradores";
 
-import EmpresaLayout from "../components/layout/empresa/EmpresaLayout";
+// Empresa
+import EmpresaDashboard from "../pages/empresa/EmpresaDashboard";
+import ProductosEmpresa from "../pages/empresa/ProductosEmpresa";
+import PerfilEmpresa from "../pages/empresa/PerfilEmpresa";
+
+// Cliente
+import ClienteDashboard from "../pages/cliente/ClienteDashboard";
+import ProductosCliente from "../pages/cliente/ProductosCliente";
+import PedidosCliente from "../pages/cliente/PedidosCliente";
+import PerfilCliente from "../pages/cliente/PerfilCliente";
 
 export default function AppRouter() {
   return (
     <Routes>
+      {/* Redirección base */}
       <Route path="/" element={<Navigate to="/login" />} />
+
+      {/* Públicas */}
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
 
+      {/* Página pública protegida para cualquier rol */}
       <Route
-        path="/cliente/dashboard"
+        path="/home"
         element={
-          <ProtectedRoute requiredRole="cliente">
-            <ClienteDashboard />
+          <ProtectedRoute>
+            <Home />
           </ProtectedRoute>
         }
       />
 
+      {/* ADMIN */}
       <Route
         path="/admin/*"
         element={
@@ -51,15 +66,7 @@ export default function AppRouter() {
         <Route path="administradores" element={<Administradores />} />
       </Route>
 
-      <Route
-        path="/home"
-        element={
-          <ProtectedRoute>
-            <Home />
-          </ProtectedRoute>
-        }
-      />
-
+      {/* EMPRESA */}
       <Route
         path="/empresa/*"
         element={
@@ -69,13 +76,30 @@ export default function AppRouter() {
         }
       >
         <Route index element={<Navigate to="dashboard" replace />} />
-        <Route path="dashboard" element={<EmpresaDashboard />} /> {/* Ahora es el dashboard */}
-        <Route path="perfil" element={<PerfilEmpresa />} />         {/* Nuevo perfil editable */}
+        <Route path="dashboard" element={<EmpresaDashboard />} />
+        <Route path="perfil" element={<PerfilEmpresa />} />
         <Route path="productos" element={<ProductosEmpresa />} />
         <Route path="*" element={<NotFound />} />
-
       </Route>
 
+      {/* CLIENTE */}
+      <Route
+        path="/cliente/*"
+        element={
+          <ProtectedRoute requiredRole="cliente">
+            <ClienteLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<Navigate to="dashboard" replace />} />
+        <Route path="dashboard" element={<ClienteDashboard />} />
+        <Route path="productos" element={<ProductosCliente />} />
+        <Route path="pedidos" element={<PedidosCliente />} />
+        <Route path="perfil" element={<PerfilCliente />} />
+        <Route path="*" element={<NotFound />} />
+      </Route>
+
+      {/* Cualquier otra ruta no encontrada */}
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

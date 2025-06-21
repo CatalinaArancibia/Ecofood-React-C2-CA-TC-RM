@@ -46,6 +46,14 @@ export default function Login() {
       if (datos.tipo === "admin") {
         navigate("/admin/dashboard");
       } else if (datos.tipo === "cliente") {
+        Swal.fire({
+          title: `¡Bienvenido, ${datos.nombre || "cliente"}!`,
+          text: "Nos alegra verte de nuevo.",
+          icon: "success",
+          confirmButtonText: "Continuar",
+          timer: 3000,
+          timerProgressBar: true,
+        });
         navigate("/cliente/dashboard");
       } else if (datos.tipo === "empresa") {
         navigate("/empresa/dashboard");

@@ -1,34 +1,47 @@
-import "./ClienteDashboard.css";
-import { useNavigate } from "react-router-dom";
-
+import React from "react";
+import { Link } from "react-router-dom";
+import "../admin/AdminDashboard.css";
 
 export default function ClienteDashboard() {
-  const navigate = useNavigate();
   return (
-    <div className="cliente-dashboard">
+    <div className="admin-dashboard">
       <h1>Panel del Cliente</h1>
-      <p className="welcome-msg">
-        Bienvenido a EcoFood, disfruta de tu experiencia sostenible.
-      </p>
+      <p>Bienvenido a tu panel de usuario en ConecTela</p>
 
-      <section className="order-summary">
-        <h2>Resumen de pedidos</h2>
-        <p>Aún no tienes pedidos registrados.</p>
-        <button
-          onClick={() => navigate("/productos")}
-          className="btn-eco"
-        >
-          Explorar productos
-        </button>
-        
-        <button
-          onClick={() => navigate("/home")}
-          className="btn-eco mt-3"
-        >
-          Visitar pagina WEB
-        </button>
+      <section className="dashboard-cards">
+        <div className="card-dashboard">
+          <h3>Mi Perfil</h3>
+          <p>Revisa o actualiza tu información personal.</p>
+          <Link to="/cliente/perfil" className="card-button">
+            Ver Perfil
+          </Link>
+        </div>
+
+        <div className="card-dashboard">
+          <h3>Productos</h3>
+          <p>Explora los productos disponibles para compra.</p>
+          <Link to="/cliente/productos" className="card-button">
+            Ver Productos
+          </Link>
+        </div>
+
+        <div className="card-dashboard">
+          <h3>Mi Carrito</h3>
+          <p>Revisa y gestiona los productos añadidos a tu carrito.</p>
+          <Link to="/cliente/carrito" className="card-button">
+            Ver Carrito
+          </Link>
+        </div>
+
+        <div className="card-dashboard">
+          <h3>Mis Pedidos</h3>
+          <p>Consulta tus compras realizadas.</p>
+          <Link to="/cliente/pedidos" className="card-button">
+            Ver Pedidos
+          </Link>
+        </div>
       </section>
-      
     </div>
   );
 }
+
