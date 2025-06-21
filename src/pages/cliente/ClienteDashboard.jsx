@@ -26,14 +26,6 @@ export default function ClienteDashboard() {
         </div>
 
         <div className="card-dashboard">
-          <h3>Mi Carrito</h3>
-          <p>Revisa y gestiona los productos añadidos a tu carrito.</p>
-          <Link to="/cliente/carrito" className="card-button">
-            Ver Carrito
-          </Link>
-        </div>
-
-        <div className="card-dashboard">
           <h3>Mis Pedidos</h3>
           <p>Consulta tus compras realizadas.</p>
           <Link to="/cliente/pedidos" className="card-button">
