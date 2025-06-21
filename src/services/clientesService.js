@@ -1,76 +1,72 @@
 import { db } from "./firebase";
 import {
-  collection,
-  getDocs,
-  addDoc,
-  updateDoc,
-  deleteDoc,
-  doc,
-  query,
-  where
+  collection, getDocs, setDoc, updateDoc, deleteDoc,
+  doc, query, where, getDoc, serverTimestamp
 } from "firebase/firestore";
 
-// Obtener todos los clientes
+/* referencia a la colección de todos los usuarios */
+const usuariosCol = collection(db, "usuarios");
+
+/* ─────────────────────── Lectura ─────────────────────── */
 export const getClientes = async () => {
-  const q = query(collection(db, "usuarios"), where("tipo", "==", "cliente"));
-  const querySnapshot = await getDocs(q);
-  return querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+  const q = query(usuariosCol, where("tipo", "==", "cliente"));
+  const snap = await getDocs(q);
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
 };
 
-// Verificar si un email existe en los clientes
-export const verificarEmailCliente = async (email) => {
+export const getClienteById = async (id) => {
+  const ref = doc(db, "usuarios", id);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) throw new Error("Cliente no encontrado");
+  return { id: snap.id, ...snap.data() };
+};
+
+/* ─────────── helper: e-mail único ─────────── */
+const emailYaExiste = async (email, excluirId = null) => {
   if (!email) return false;
-  
-  const q = query(
-    collection(db, "usuarios"),
+  let q = query(
+    usuariosCol,
     where("tipo", "==", "cliente"),
-    where("email", "==", email)
+    where("correo", "==", email)
   );
-  
-  const querySnapshot = await getDocs(q);
-  return !querySnapshot.empty;
+  if (excluirId) q = query(q, where("__name__", "!=", excluirId));
+  const snap = await getDocs(q);
+  return !snap.empty;
 };
 
-// Crear un nuevo cliente
-export const addCliente = async (clienteData) => {
-  // Verificar si el email ya existe
-  if (clienteData.email) {
-    const existe = await verificarEmailCliente(clienteData.email);
-    if (existe) {
-      throw new Error("El email ya está registrado");
-    }
+/* ─────────────────────── Crear ─────────────────────── */
+/**
+ * @param {string} uid   UID del usuario creado en Firebase Auth
+ * @param {object} data  Datos del cliente (nombre, rut, etc.)
+ */
+export const addCliente = async (uid, data) => {
+  if (await emailYaExiste(data.correo)) {
+    throw new Error("El correo ya está registrado");
   }
 
-  const docRef = await addDoc(collection(db, "usuarios"), {
-    ...clienteData,
-    tipo: "cliente"
+  await setDoc(doc(db, "usuarios", uid), {
+    ...data,
+    tipo: "cliente",
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp()
   });
-  return docRef.id;
+  return uid;
 };
 
-// Actualizar un cliente existente
-export const updateCliente = async (id, clienteData) => {
-  // Verificar si el email ya existe en otro cliente
-  if (clienteData.email) {
-    const q = query(
-      collection(db, "usuarios"),
-      where("tipo", "==", "cliente"),
-      where("email", "==", clienteData.email),
-      where("__name__", "!=", id)
-    );
-    
-    const querySnapshot = await getDocs(q);
-    if (!querySnapshot.empty) {
-      throw new Error("El email ya está registrado en otro cliente");
-    }
+/* ─────────────────────── Actualizar ─────────────────────── */
+export const updateCliente = async (id, data) => {
+  if (data.correo && await emailYaExiste(data.correo, id)) {
+    throw new Error("El correo ya está registrado en otro cliente");
   }
 
-  const clienteRef = doc(db, "usuarios", id);
-  await updateDoc(clienteRef, clienteData);
+  await updateDoc(doc(db, "usuarios", id), {
+    ...data,
+    updatedAt: serverTimestamp()
+  });
   return id;
 };
 
-// Eliminar cliente 
+/* ─────────────────────── Eliminar ─────────────────────── */
 export const deleteCliente = async (id) => {
   await deleteDoc(doc(db, "usuarios", id));
 };
