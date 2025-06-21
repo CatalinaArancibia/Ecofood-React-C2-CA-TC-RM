@@ -6,7 +6,7 @@ export default function ClienteDashboard() {
   return (
     <div className="admin-dashboard">
       <h1>Panel del Cliente</h1>
-      <p>Bienvenido a tu panel de usuario en ConecTela</p>
+      <p>Bienvenido a tu panel de usuario en Ecofood</p>
 
       <section className="dashboard-cards">
         <div className="card-dashboard">
