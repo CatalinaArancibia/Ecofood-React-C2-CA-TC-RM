@@ -8,12 +8,14 @@ import CarritoSidebar from "../../components/CarritoSidebar";
 import { guardarCarritoFirestore, cargarCarritoFirestore } from "../../services/carritoService";
 import { generarPedido } from "../../services/pedidoService";
 
-
 export default function ProductosCliente() {
   const { user } = useAuth();
   const [productos, setProductos] = useState([]);
   const [empresas, setEmpresas] = useState([]);
   const [busqueda, setBusqueda] = useState("");
+  const [filtroDireccion, setFiltroDireccion] = useState("");
+  const [filtroEstado, setFiltroEstado] = useState("");
+  const [filtroPrecio, setFiltroPrecio] = useState("");
   const [orden, setOrden] = useState("nombre-asc");
   const [limite, setLimite] = useState(5);
   const [paginaActual, setPaginaActual] = useState(1);
@@ -24,33 +26,26 @@ export default function ProductosCliente() {
   const [carrito, setCarrito] = useState([]);
   const [carritoAbierto, setCarritoAbierto] = useState(false);
 
-
   useEffect(() => {
     const fetchData = async () => {
-      const [prods, emps] = await Promise.all([
-        getProductos(),
-        getEmpresas(),
-      ]);
+      const [prods, emps] = await Promise.all([getProductos(), getEmpresas()]);
       setProductos(prods);
       setEmpresas(emps);
     };
     fetchData();
   }, []);
 
-  // 🟢 Cargar carrito desde Firestore cuando el usuario inicia sesión
   useEffect(() => {
     if (user) {
       cargarCarritoFirestore(user.uid).then((items) => setCarrito(items));
     }
   }, [user]);
 
-  // 🟢 Guardar el carrito en Firestore cada vez que cambia
   useEffect(() => {
     if (user) {
       guardarCarritoFirestore(user.uid, carrito);
     }
   }, [carrito]);
-
 
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
@@ -69,10 +64,32 @@ export default function ProductosCliente() {
     const enStock = p.cantidad > 0;
     const disponible = p.estado === "disponible";
     const noVencido = vencimiento >= hoy;
+
+    const empresa = empresas.find((e) => e.id === p.empresaId);
+    const nombreEmpresa = empresa?.nombre?.toLowerCase() || "";
+    const direccionEmpresa = empresa?.direccion?.toLowerCase() || "";
+    const comunaEmpresa = empresa?.comuna?.toLowerCase() || "";
+
     const coincideBusqueda =
       p.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
-      getEmpresaNombre(p.empresaId).toLowerCase().includes(busqueda.toLowerCase());
-    return disponible && enStock && noVencido && coincideBusqueda;
+      nombreEmpresa.includes(busqueda.toLowerCase());
+
+    const coincideDireccion =
+      filtroDireccion === "" ||
+      direccionEmpresa.includes(filtroDireccion.toLowerCase()) ||
+      comunaEmpresa.includes(filtroDireccion.toLowerCase());
+
+    const coincideEstado =
+      filtroEstado === "" || p.estado === filtroEstado;
+
+    const coincidePrecio =
+      filtroPrecio === "" ||
+      (filtroPrecio === "gratis" && p.precio === 0) ||
+      (filtroPrecio === "pago" && p.precio > 0);
+
+    return disponible && enStock && noVencido &&
+      coincideBusqueda && coincideDireccion &&
+      coincideEstado && coincidePrecio;
   });
 
   const productosOrdenados = [...productosFiltrados].sort((a, b) => {
@@ -117,7 +134,7 @@ export default function ProductosCliente() {
 
     try {
       await generarPedido(user.uid, carrito);
-      await guardarCarritoFirestore(user.uid, []); // Limpia el carrito
+      await guardarCarritoFirestore(user.uid, []);
       setCarrito([]);
       Swal.fire("Pedido realizado", "Tu pedido ha sido enviado correctamente", "success");
     } catch (error) {
@@ -126,10 +143,18 @@ export default function ProductosCliente() {
     }
   };
 
+  const limpiarFiltros = () => {
+    setBusqueda("");
+    setFiltroDireccion("");
+    setFiltroEstado("");
+    setFiltroPrecio("");
+    setOrden("nombre-asc");
+    setPaginaActual(1);
+  };
 
   return (
     <div className="container py-4">
-      <h3>Explorar Productos Disponibles</h3>
+      <h3 className="mb-4">Explorar Productos Disponibles</h3>
 
       <input
         type="text"
@@ -142,6 +167,47 @@ export default function ProductosCliente() {
         }}
       />
 
+      <div className="row mb-3 align-items-end">
+        <div className="col-md-4">
+          <label>Buscar por dirección o comuna</label>
+          <input
+            type="text"
+            className="form-control"
+            placeholder="Ej. Providencia, La Serena..."
+            value={filtroDireccion}
+            onChange={(e) => {
+              setFiltroDireccion(e.target.value);
+              setPaginaActual(1);
+            }}
+          />
+        </div>
+
+        <div className="col-md-4">
+          <label>Filtrar por precio</label>
+          <select
+            className="form-select"
+            value={filtroPrecio}
+            onChange={(e) => {
+              setFiltroPrecio(e.target.value);
+              setPaginaActual(1);
+            }}
+          >
+            <option value="">Todos</option>
+            <option value="gratis">Gratuito</option>
+            <option value="pago">De pago</option>
+          </select>
+        </div>
+
+        <div className="col-md-4 d-flex justify-content-start mt-3 mt-md-0">
+          <button
+            className="btn btn-outline-secondary"
+            onClick={limpiarFiltros}
+          >
+            Limpiar filtros
+          </button>
+        </div>
+      </div>
+
       <div className="row mb-4">
         <div className="col-md-4">
           <label>Ordenar por</label>
@@ -152,8 +218,8 @@ export default function ProductosCliente() {
           >
             <option value="nombre-asc">Nombre (A-Z)</option>
             <option value="nombre-desc">Nombre (Z-A)</option>
-            <option value="precio-asc">Precio (↑)</option>
-            <option value="precio-desc">Precio (↓)</option>
+            <option value="precio-asc">Precio (↑) Menor a Mayor</option>
+            <option value="precio-desc">Precio (↓) Mayor a Menor</option>
           </select>
         </div>
 
@@ -180,24 +246,31 @@ export default function ProductosCliente() {
         ) : (
           productosPaginados.map((p) => (
             <div key={p.id} className="col">
-              <div className="card h-100 shadow">
+              <div className="card h-100 border shadow-sm">
                 <div className="card-body">
                   <h5 className="card-title">{p.nombre}</h5>
-                  <p className="card-text">{p.descripcion}</p>
-                  <p className="card-text">
-                    Empresa: <strong>{getEmpresaNombre(p.empresaId)}</strong>
+                  <p className="card-text text-muted">{p.descripcion}</p>
+                  <p className="card-text mb-1">
+                    <strong>Empresa:</strong> {getEmpresaNombre(p.empresaId)}
+                  </p>
+                  <p className="card-text mb-0">
+                    <strong>Stock:</strong> {p.cantidad}
                   </p>
                   <p className="card-text">
-                    Stock: {p.cantidad} | Precio:{" "}
-                    {p.precio === 0 ? "Gratuito" : `$${p.precio}`}
+                    <strong>Precio:</strong>{" "}
+                    {p.precio === 0 ? (
+                      <span className="badge bg-success">Gratuito</span>
+                    ) : (
+                      <span className="text-primary fw-bold">${p.precio}</span>
+                    )}
                   </p>
                 </div>
-                <div className="card-footer d-flex gap-2 justify-content-center">
+                <div className="card-footer bg-white border-top d-flex justify-content-center">
                   <button
-                    className="btn btn-outline-success"
+                    className="btn btn-outline-primary"
                     onClick={() => handleAgregarAlCarro(p)}
                   >
-                    Agregar al carrito
+                    🛒 Agregar al carrito
                   </button>
                 </div>
               </div>
@@ -245,7 +318,7 @@ export default function ProductosCliente() {
             zIndex: 9999,
             width: "50px",
             height: "50px",
-            boxShadow: "0 2px 10px rgba(0,0,0,0.3)"
+            boxShadow: "0 2px 10px rgba(0,0,0,0.3)",
           }}
           title="Volver arriba"
         >
@@ -253,7 +326,6 @@ export default function ProductosCliente() {
         </button>
       )}
 
-      {/* Modal de cantidad */}
       {modalVisible && productoSeleccionado && (
         <CantidadModal
           producto={productoSeleccionado}
@@ -269,9 +341,7 @@ export default function ProductosCliente() {
         setAbierto={setCarritoAbierto}
         onComprar={handleComprar}
       />
-
     </div>
   );
 }
-
 
