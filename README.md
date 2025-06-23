@@ -1,6 +1,4 @@
 EcoFood – Proyecto React + Firebase
-IMPORTANTE!!!
-node_modules no esta porque es muy pesado xd pero instalenlo ustedes
 
 ## 🚀 Tecnologías utilizadas
 
