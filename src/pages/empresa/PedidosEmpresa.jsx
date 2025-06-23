@@ -1,155 +1,204 @@
+/*  PedidosEmpresa.jsx
+    Cada empresa confirma o rechaza su parte del pedido.
+    El pedido pasa a **en_proceso** solo cuando TODAS las empresas lo confirman
+    y pasa a **cancelado** si cualquiera lo rechaza.                         */
+
 import React, { useEffect, useState } from "react";
 import {
     collection,
+    query,
+    where,
     getDocs,
     doc,
     getDoc,
-    updateDoc
+    runTransaction
 } from "firebase/firestore";
 import { db } from "../../services/firebase";
 import { useAuth } from "../../context/AuthContext";
 import Swal from "sweetalert2";
 import PedidoCardEmpresa from "../../components/PedidoCardEmpresa";
 
+/* ══════════════════════════════════════════════════════════════════════ */
+/*                               Componente                              */
+/* ══════════════════════════════════════════════════════════════════════ */
 export default function PedidosEmpresa() {
+    /* ---------- contexto usuario ---------- */
     const { user } = useAuth();
+
+    /* ---------- estado UI ---------- */
     const [pedidos, setPedidos] = useState([]);
     const [busqueda, setBusqueda] = useState("");
     const [filtroEstado, setFiltroEstado] = useState("");
     const [orden, setOrden] = useState("reciente");
     const [limite, setLimite] = useState(5);
-    const [paginaActual, setPaginaActual] = useState(1);
+    const [pagina, setPagina] = useState(1);
     const [scrollY, setScrollY] = useState(0);
 
+    /* ---------- cargar pedidos que involucran a ESTA empresa ---------- */
     useEffect(() => {
+        if (!user) return;
         const fetchPedidos = async () => {
-            if (!user) return;
+            /* ←— consulta que cumple las reglas: solo pedidos donde
+               el array “empresas” contiene el UID de la empresa logueada */
+            const q = query(
+                collection(db, "pedidos"),
+                where("empresas", "array-contains", user.uid)
+            );
+            const snap = await getDocs(q);
 
-            const pedidosRef = collection(db, "pedidos");
-            const querySnapshot = await getDocs(pedidosRef);
+            const lista = [];
 
-            const data = [];
+            for (const d of snap.docs) {
+                const raw = d.data();
+                raw.id = d.id;
 
-            for (const docSnap of querySnapshot.docs) {
-                const pedido = docSnap.data();
-                pedido.id = docSnap.id;
-
-                const productosEmpresa = await Promise.all(
-                    (pedido.productos || []).map(async (prod) => {
-                        const prodDoc = await getDoc(doc(db, "productos", prod.productoId));
-                        if (!prodDoc.exists() || prod.empresaId !== user.uid) return null;
+                /* productos que pertenecen únicamente a esta empresa */
+                const prods = await Promise.all(
+                    (raw.productos || []).map(async (p) => {
+                        if (p.empresaId !== user.uid) return null;
+                        const prodSnap = await getDoc(doc(db, "productos", p.productoId));
+                        if (!prodSnap.exists()) return null;
                         return {
-                            ...prod,
-                            nombreProducto: prodDoc.data().nombre,
-                            cantidadDisponible: prodDoc.data().cantidad,
-                            estadoProducto: prodDoc.data().estado || "disponible"
+                            ...p,
+                            nombreProducto: prodSnap.data().nombre,
+                            cantidadDisponible: prodSnap.data().cantidad
                         };
                     })
                 );
 
-                const productosFiltrados = productosEmpresa.filter(Boolean);
+                const propios = prods.filter(Boolean);
+                if (!propios.length) continue; // por seguridad
 
-                if (productosFiltrados.length > 0) {
-                    data.push({
-                        ...pedido,
-                        productos: productosFiltrados,
-                        fecha: pedido.fecha?.toDate?.() || new Date()
-                    });
-                }
+                lista.push({
+                    ...raw,
+                    productos: propios,
+                    fecha: raw.fecha?.toDate?.() || new Date(),
+                    miEstado: raw.confirmaciones?.[user.uid] || "pendiente"
+                });
             }
-
-            setPedidos(data);
+            setPedidos(lista);
         };
 
         fetchPedidos();
     }, [user]);
 
-    useEffect(() => {
-        const handleScroll = () => setScrollY(window.scrollY);
-        window.addEventListener("scroll", handleScroll);
-        return () => window.removeEventListener("scroll", handleScroll);
-    }, []);
-
-    const actualizarPedido = async (pedidoId, nuevosDatos) => {
-        const pedidoRef = doc(db, "pedidos", pedidoId);
-        await updateDoc(pedidoRef, nuevosDatos);
-    };
-
-    const procesarPedido = async (pedidoId, productos, aprobado) => {
-        const confirm = await Swal.fire({
-            title: aprobado ? "¿Confirmar pedido?" : "¿Rechazar pedido?",
+    /* ---------- transacción de confirmar / rechazar ---------- */
+    const procesarPedido = async (pedido, aprobar) => {
+        const resp = await Swal.fire({
+            title: aprobar ? "¿Confirmar pedido?" : "¿Rechazar pedido?",
             icon: "question",
             showCancelButton: true,
-            confirmButtonText: aprobado ? "Confirmar" : "Rechazar",
+            confirmButtonText: aprobar ? "Confirmar" : "Rechazar",
             cancelButtonText: "Cancelar"
         });
+        if (!resp.isConfirmed) return;
 
-        if (!confirm.isConfirmed) return;
+        try {
+            await runTransaction(db, async (tx) => {
+                /* 1. LEER pedido */
+                const pedidoRef = doc(db, "pedidos", pedido.id);
+                const snap = await tx.get(pedidoRef);
+                if (!snap.exists()) throw new Error("El pedido ya no existe");
 
-        if (aprobado) {
-            for (const prod of productos) {
-                const prodRef = doc(db, "productos", prod.productoId);
-                const prodSnap = await getDoc(prodRef);
-                if (!prodSnap.exists()) continue;
+                const data = snap.data();
+                const confirm = { ...(data.confirmaciones || {}) };
+                confirm[user.uid] = aprobar ? "confirmado" : "cancelado";
 
-                const prodData = prodSnap.data();
-                const nuevoStock = prodData.cantidad - prod.cantidad;
-
-                const updateData = { cantidad: nuevoStock };
-                if (nuevoStock <= 0) {
-                    updateData.estado = "inactivo";
+                /* 2. Calcular nuevo estado global */
+                let nuevoEstado = data.estado; // por defecto se mantiene
+                if (Object.values(confirm).includes("cancelado")) {
+                    nuevoEstado = "cancelado";
+                } else if (data.empresas.every((e) => confirm[e] === "confirmado")) {
+                    nuevoEstado = "en_proceso";
+                } else {
+                    nuevoEstado = "pendiente";
                 }
 
-                await updateDoc(prodRef, updateData);
-            }
+                /* 3. Si esta empresa confirma → descontar stock de SUS productos */
+                if (aprobar) {
+                    for (const p of pedido.productos) {
+                        const prodRef = doc(db, "productos", p.productoId);
+                        const prodSnap = await tx.get(prodRef);
+                        if (!prodSnap.exists()) continue;
+                        const stockActual = prodSnap.data().cantidad;
+                        const nuevoStock = stockActual - p.cantidad;
+                        tx.update(prodRef, {
+                            cantidad: nuevoStock,
+                            estado: nuevoStock <= 0 ? "inactivo" : prodSnap.data().estado
+                        });
+                    }
+                }
 
-            await actualizarPedido(pedidoId, { estado: "en_proceso" });
-            Swal.fire("Confirmado", "Pedido en proceso", "success");
-        } else {
-            await actualizarPedido(pedidoId, { estado: "cancelado" });
-            Swal.fire("Rechazado", "Pedido rechazado", "info");
+                /* 4. Actualizar confirmaciones y estado */
+                tx.update(pedidoRef, {
+                    confirmaciones: confirm,
+                    estado: nuevoEstado
+                });
+            });
+
+            Swal.fire(
+                aprobar ? "Confirmado" : "Rechazado",
+                aprobar
+                    ? "Has confirmado tu parte del pedido"
+                    : "Has rechazado tu parte del pedido",
+                aprobar ? "success" : "info"
+            );
+            /* refrescar lista */
+            setPedidos((prev) =>
+                prev.map((p) =>
+                    p.id === pedido.id
+                        ? { ...p, miEstado: aprobar ? "confirmado" : "cancelado", estado: aprobar ? (p.estado === "pendiente" ? "pendiente" : p.estado) : "cancelado" }
+                        : p
+                )
+            );
+        } catch (e) {
+            console.error(e);
+            Swal.fire("Error", e.message, "error");
         }
-
-        setPedidos((prev) =>
-            prev.map((p) =>
-                p.id === pedidoId ? { ...p, estado: aprobado ? "en_proceso" : "cancelado" } : p
-            )
-        );
     };
 
-    const pedidosFiltrados = pedidos.filter((pedido) =>
-        pedido.productos.some((prod) =>
-            prod.nombreProducto.toLowerCase().includes(busqueda.toLowerCase())
-        ) &&
-        (filtroEstado === "" || pedido.estado === filtroEstado)
+    /* ---------- filtros, orden, paginado ---------- */
+    const filtrados = pedidos.filter(
+        (p) =>
+            p.productos.some((prod) =>
+                prod.nombreProducto.toLowerCase().includes(busqueda.toLowerCase())
+            ) && (filtroEstado ? p.estado === filtroEstado : true)
     );
 
-    const pedidosOrdenados = [...pedidosFiltrados].sort((a, b) => {
+    const ordenados = [...filtrados].sort((a, b) => {
         if (orden === "reciente") return b.fecha - a.fecha;
         if (orden === "antiguo") return a.fecha - b.fecha;
         if (orden === "estado") return a.estado.localeCompare(b.estado);
         return 0;
     });
 
-    const totalPaginas = Math.ceil(pedidosOrdenados.length / limite);
-    const inicio = (paginaActual - 1) * limite;
-    const pedidosPaginados = pedidosOrdenados.slice(inicio, inicio + limite);
+    const totalPag = Math.ceil(ordenados.length / limite);
+    const inicio = (pagina - 1) * limite;
+    const visibles = ordenados.slice(inicio, inicio + limite);
 
+    /* ---------- listener scroll para botón ↑ ---------- */
+    useEffect(() => {
+        const handle = () => setScrollY(window.scrollY);
+        window.addEventListener("scroll", handle);
+        return () => window.removeEventListener("scroll", handle);
+    }, []);
+
+    /* ════════════════════════ UI ════════════════════════ */
     return (
         <div className="container py-4">
             <h3 className="mb-4">📦 Pedidos recibidos</h3>
 
+            {/*  filtros  */}
             <div className="row mb-3 align-items-end">
                 <div className="col-md-3">
                     <label>Buscar por producto</label>
                     <input
-                        type="text"
                         className="form-control"
-                        placeholder="Introduce el nombre del producto"
+                        placeholder="Nombre del producto"
                         value={busqueda}
                         onChange={(e) => {
                             setBusqueda(e.target.value);
-                            setPaginaActual(1);
+                            setPagina(1);
                         }}
                     />
                 </div>
@@ -161,7 +210,7 @@ export default function PedidosEmpresa() {
                         value={filtroEstado}
                         onChange={(e) => {
                             setFiltroEstado(e.target.value);
-                            setPaginaActual(1);
+                            setPagina(1);
                         }}
                     >
                         <option value="">Todos</option>
@@ -191,8 +240,8 @@ export default function PedidosEmpresa() {
                         className="form-select"
                         value={limite}
                         onChange={(e) => {
-                            setLimite(Number(e.target.value));
-                            setPaginaActual(1);
+                            setLimite(+e.target.value);
+                            setPagina(1);
                         }}
                     >
                         <option value={3}>3</option>
@@ -202,37 +251,40 @@ export default function PedidosEmpresa() {
                 </div>
             </div>
 
-            {pedidosPaginados.length === 0 ? (
-                <p className="text-muted">No hay pedidos que coincidan con tu búsqueda.</p>
-            ) : (
+            {/*  lista  */}
+            {visibles.length ? (
                 <div className="row row-cols-1 row-cols-md-3 g-4">
-                    {pedidosPaginados.map((pedido) => (
-                        <div key={pedido.id} className="col">
+                    {visibles.map((p) => (
+                        <div key={p.id} className="col">
                             <PedidoCardEmpresa
-                                pedido={pedido}
-                                onConfirmar={() => procesarPedido(pedido.id, pedido.productos, true)}
-                                onRechazar={() => procesarPedido(pedido.id, pedido.productos, false)}
+                                pedido={p}
+                                onConfirmar={() => procesarPedido(p, true)}
+                                onRechazar={() => procesarPedido(p, false)}
                             />
                         </div>
                     ))}
                 </div>
+            ) : (
+                <p className="text-muted">No hay pedidos que coincidan con la búsqueda.</p>
             )}
 
-            {totalPaginas > 1 && (
+            {/*  paginación  */}
+            {totalPag > 1 && (
                 <div className="mt-4 d-flex justify-content-center gap-2 flex-wrap">
                     <button
                         className="btn btn-outline-success"
-                        disabled={paginaActual === 1}
-                        onClick={() => setPaginaActual((prev) => Math.max(prev - 1, 1))}
+                        disabled={pagina === 1}
+                        onClick={() => setPagina((p) => Math.max(p - 1, 1))}
                     >
                         ← Anterior
                     </button>
 
-                    {Array.from({ length: totalPaginas }, (_, i) => (
+                    {Array.from({ length: totalPag }, (_, i) => (
                         <button
                             key={i}
-                            className={`btn ${paginaActual === i + 1 ? "btn-success" : "btn-outline-success"}`}
-                            onClick={() => setPaginaActual(i + 1)}
+                            className={`btn ${pagina === i + 1 ? "btn-success" : "btn-outline-success"
+                                }`}
+                            onClick={() => setPagina(i + 1)}
                         >
                             {i + 1}
                         </button>
@@ -240,17 +292,18 @@ export default function PedidosEmpresa() {
 
                     <button
                         className="btn btn-outline-success"
-                        disabled={paginaActual === totalPaginas}
-                        onClick={() => setPaginaActual((prev) => Math.min(prev + 1, totalPaginas))}
+                        disabled={pagina === totalPag}
+                        onClick={() => setPagina((p) => Math.min(p + 1, totalPag))}
                     >
                         Siguiente →
                     </button>
                 </div>
             )}
 
+            {/*  botón scroll-top  */}
             {scrollY > 100 && (
                 <button
-                    onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+                    title="Volver arriba"
                     className="btn btn-success rounded-circle"
                     style={{
                         position: "fixed",
@@ -259,9 +312,9 @@ export default function PedidosEmpresa() {
                         zIndex: 9999,
                         width: "50px",
                         height: "50px",
-                        boxShadow: "0 2px 10px rgba(0,0,0,0.3)",
+                        boxShadow: "0 2px 10px rgba(0,0,0,.3)"
                     }}
-                    title="Volver arriba"
+                    onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
                 >
                     ↑
                 </button>
@@ -269,6 +322,3 @@ export default function PedidosEmpresa() {
         </div>
     );
 }
-
-
-
