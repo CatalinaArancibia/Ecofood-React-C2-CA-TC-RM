@@ -1,176 +1,151 @@
 import { db } from "./firebase";
-import { 
-  collection, 
-  getDocs, 
-  addDoc, 
-  updateDoc, 
-  deleteDoc, 
-  doc, 
-  query, 
-  where, 
-  getDoc 
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  getDoc,
+  doc,
+  setDoc,
+  updateDoc
 } from "firebase/firestore";
-import { getAuth } from "firebase/auth";
 
-// Función auxiliar para verificar si existe un admin principal
+/* ───────── helpers comunes ───────── */
+
+/** Comprueba si existe YA un admin principal (opcionalmente excluyendo un id). */
 const existeAdminPrincipal = async (excludeId = null) => {
-  let q = query(
+  const q = query(
     collection(db, "usuarios"),
     where("tipo", "==", "admin"),
     where("tipoAdmin", "==", "principal")
   );
-
-  const snapshot = await getDocs(q);
-  
-  if (excludeId) {
-    return snapshot.docs.some(doc => doc.id !== excludeId && doc.data().tipoAdmin === "principal");
-  }
-  
-  return !snapshot.empty;
+  const snap = await getDocs(q);
+  return snap.docs.some((d) => (excludeId ? d.id !== excludeId : true));
 };
 
-// Obtener todos los administradores
-export const getAdmins = async () => {
-  const q = query(collection(db, "usuarios"), where("tipo", "==", "admin"));
-  const snapshot = await getDocs(q);
-  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-};
-
-// Obtener usuarios promovibles (clientes y otros admins)
-export const getNonAdminUsers = async () => {
+/** Comprueba duplicidad de RUT / correo / teléfono entre administradores. */
+const existeDuplicado = async (campo, valor, excludeId = null) => {
+  if (!valor) return false;
   const q = query(
     collection(db, "usuarios"),
-    where("tipo", "in", ["cliente", "admin"])
+    where("tipo", "==", "admin"),
+    where(campo, "==", valor)
   );
-  const snapshot = await getDocs(q);
-  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  const snap = await getDocs(q);
+  return snap.docs.some((d) => (excludeId ? d.id !== excludeId : true));
 };
 
-// Crear nuevo administrador
-export const addAdmin = async (adminData) => {
-  if (!adminData.nombre.trim()) {
-    throw new Error("Nombre es obligatorio");
-  }
+/* ───────── lecturas ───────── */
 
-  if (!adminData.rut.trim()) {
-    throw new Error("RUT es obligatorio");
-  }
+export const getAdmins = async () => {
+  const q = query(collection(db, "usuarios"), where("tipo", "==", "admin"));
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+};
 
-  if (adminData.tipoAdmin === "principal") {
-    const existePrincipal = await existeAdminPrincipal();
-    if (existePrincipal) {
+/** Clientes (y cualquier user no admin) → para “promover” */
+export const getNonAdminUsers = async () => {
+  const q = query(collection(db, "usuarios"), where("tipo", "in", ["cliente"]));
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+};
+
+/* ───────── creación ─────────
+   uid     → UID del usuario que acabamos de crear en Firebase Auth
+   data    → resto de campos del formulario                            */
+export const addAdmin = async (uid, data) => {
+  if (!uid) throw new Error("Falta UID del usuario");
+  if (!data.nombre?.trim()) throw new Error("Nombre es obligatorio");
+  if (!data.rut?.trim()) throw new Error("RUT es obligatorio");
+
+  /* duplicados */
+  if (await existeDuplicado("rut", data.rut))
+    throw new Error("El RUT ya está registrado");
+  if (await existeDuplicado("correo", data.correo))
+    throw new Error("El correo ya está registrado");
+  if (await existeDuplicado("telefono", data.telefono))
+    throw new Error("El teléfono ya está registrado");
+
+  /* único admin principal */
+  if (data.tipoAdmin === "principal" && (await existeAdminPrincipal()))
+    throw new Error("Ya existe un administrador principal");
+
+  /* guardamos con id = uid  */
+  await setDoc(doc(db, "usuarios", uid), {
+    ...data,
+    uid,
+    tipo: "admin",
+    createdAt: new Date()
+  });
+  return uid;
+};
+
+/* ───────── promoción cliente → admin ───────── */
+export const promoteUserToAdmin = async (uid, data) => {
+  const ref = doc(db, "usuarios", uid);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) throw new Error("Usuario no encontrado");
+
+  /* solo clientes */
+  if (snap.data().tipo !== "cliente")
+    throw new Error("Solo se pueden promover clientes");
+
+  /* duplicados de campos  */
+  if (await existeDuplicado("rut", data.rut, uid))
+    throw new Error("El RUT ya está registrado");
+  if (await existeDuplicado("telefono", data.telefono, uid))
+    throw new Error("El teléfono ya está registrado");
+
+  await updateDoc(ref, {
+    ...data,
+    tipo: "admin",
+    tipoAdmin: data.tipoAdmin || "secundario",
+    promotedAt: new Date()
+  });
+};
+
+/* ───────── actualización ───────── */
+export const updateAdmin = async (id, data, currentUid) => {
+  const ref = doc(db, "usuarios", id);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) throw new Error("Administrador no encontrado");
+
+  const prev = snap.data();
+
+  /* reglas sobre principal */
+  if (prev.tipoAdmin === "principal" && id !== currentUid)
+    throw new Error("Solo el administrador principal puede editar su perfil");
+
+  if (data.tipoAdmin === "principal" && prev.tipoAdmin !== "principal") {
+    if (await existeAdminPrincipal(id))
       throw new Error("Ya existe un administrador principal");
-    }
   }
-  
-  try {
-    const docRef = await addDoc(collection(db, "usuarios"), {
-      ...adminData,
-      tipo: "admin",
-      createdAt: new Date()
-    });
-    return docRef.id;
-  } catch (error) {
-    console.error("Error al agregar administrador:", error);
-    throw error;
-  }
+
+  /* duplicados (excepto mi propio doc) */
+  if (await existeDuplicado("rut", data.rut, id))
+    throw new Error("El RUT ya está registrado");
+  if (await existeDuplicado("correo", data.correo, id))
+    throw new Error("El correo ya está registrado");
+  if (await existeDuplicado("telefono", data.telefono, id))
+    throw new Error("El teléfono ya está registrado");
+
+  await updateDoc(ref, { ...data, updatedAt: new Date() });
 };
 
-// Promover usuario existente a administrador
-export const promoteUserToAdmin = async (userId, adminData) => {
-  const userRef = doc(db, "usuarios", userId);
-  
-  try {
-    // Verificar que el usuario exista y sea promovible
-    const userDoc = await getDoc(userRef);
-    if (!userDoc.exists()) {
-      throw new Error("Usuario no encontrado");
-    }
+/* ───────── “Eliminar” = degradar a cliente ───────── */
+export const deleteAdmin = async (id, currentUid) => {
+  if (id === currentUid) throw new Error("No puedes eliminarte a ti mismo");
 
-    const userData = userDoc.data();
-    
-    // Solo permitir promover clientes y otros admins
-    if (!["cliente", "admin"].includes(userData.tipo)) {
-      throw new Error("Solo se pueden promover clientes y administradores");
-    }
+  const ref = doc(db, "usuarios", id);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) throw new Error("Administrador no encontrado");
 
-    // Actualizar el documento
-    await updateDoc(userRef, {
-      ...adminData,
-      tipo: "admin",
-      tipoAdmin: adminData.tipoAdmin || "secundario",
-      promotedAt: new Date()
-    });
-
-    return userId;
-  } catch (error) {
-    console.error("Error al promover usuario:", error);
-    throw error;
-  }
-};
-
-// Actualizar administrador
-export const updateAdmin = async (id, adminData, currentUserId) => {
-  const adminRef = doc(db, "usuarios", id);
-  const adminDoc = await getDoc(adminRef);
-
-  if (!adminDoc.exists()) {
-    throw new Error("Administrador no encontrado");
-  }
-
-  const adminActual = adminDoc.data();
-
-  if (adminActual.tipoAdmin === "principal") {
-    if (adminData.tipoAdmin !== "principal") {
-      throw new Error("No se puede quitar el rol de administrador principal");
-    }
-    
-    if (id !== currentUserId) {
-      throw new Error("Solo el administrador principal puede editar su propia cuenta");
-    }
-  }
-
-  if (adminData.tipoAdmin === "principal" && adminActual.tipoAdmin !== "principal") {
-    const existePrincipal = await existeAdminPrincipal(id);
-    if (existePrincipal) {
-      throw new Error("Ya existe un administrador principal");
-    }
-  }
-
-  await updateDoc(adminRef, adminData);
-  return id;
-};
-
-// "Eliminar" administrador (convertir a cliente)
-export const deleteAdmin = async (id, currentUserId) => {
-  const adminRef = doc(db, "usuarios", id);
-  const adminDoc = await getDoc(adminRef);
-
-  if (!adminDoc.exists()) {
-    throw new Error("Administrador no encontrado");
-  }
-
-  const adminData = adminDoc.data();
-
-  if (adminData.tipoAdmin === "principal") {
+  if (snap.data().tipoAdmin === "principal")
     throw new Error("No se puede eliminar al administrador principal");
-  }
 
-  if (id === currentUserId) {
-    throw new Error("No puedes eliminarte a ti mismo");
-  }
-
-  try {
-    // Convertir a cliente en lugar de eliminar
-    await updateDoc(adminRef, {
-      tipo: "cliente",
-      tipoAdmin: null,
-      demotedAt: new Date()
-    });
-    
-    return id;
-  } catch (error) {
-    console.error("Error al convertir administrador a cliente:", error);
-    throw error;
-  }
+  await updateDoc(ref, {
+    tipo: "cliente",
+    tipoAdmin: null,
+    demotedAt: new Date()
+  });
 };
