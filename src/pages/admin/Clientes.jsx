@@ -30,13 +30,14 @@ export default function Clientes() {
   const [editId, setEditId] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Cambiado: usamos 'comuna' en lugar de 'ciudad'
   const [form, setForm] = useState({
     nombre: "",
     rut: "",
     telefono: "",
     direccion: "",
-    ciudad: "",
-    correo: "",
+    comuna: "",
+    email: "",
     password: ""
   });
 
@@ -72,8 +73,8 @@ export default function Clientes() {
       rut: "",
       telefono: "",
       direccion: "",
-      ciudad: "",
-      correo: "",
+      comuna: "",
+      email: "",
       password: ""
     });
 
@@ -83,8 +84,8 @@ export default function Clientes() {
     setSuccess(null);
     setLoading(true);
 
-    if (!form.nombre || !form.rut || !form.correo) {
-      setError("Nombre, RUT y correo son obligatorios");
+    if (!form.nombre || !form.rut || !form.email) {
+      setError("Nombre, RUT y email son obligatorios");
       setLoading(false);
       return;
     }
@@ -99,14 +100,15 @@ export default function Clientes() {
       return;
     }
 
+    // Cambiado: usamos 'comuna' aquí también
     const datosCliente = {
       nombre: form.nombre,
       rut: form.rut,
       telefono: form.telefono,
       direccion: form.direccion,
-      ciudad: form.ciudad,
-      correo: form.correo,
-      ubicacion: `${form.ciudad}, ${form.direccion}`
+      comuna: form.comuna,
+      email: form.email,
+      ubicacion: `${form.comuna}, ${form.direccion}`
     };
 
     try {
@@ -116,7 +118,7 @@ export default function Clientes() {
       } else {
         await verificarDuplicadosCliente({
           rut: form.rut,
-          correo: form.correo,
+          email: form.email,
           telefono: form.telefono
         });
 
@@ -124,7 +126,7 @@ export default function Clientes() {
         const secAuth = getAuth(secApp);
         const cred = await createUserWithEmailAndPassword(
           secAuth,
-          form.correo,
+          form.email,
           form.password
         );
         await sendEmailVerification(cred.user);
@@ -153,8 +155,9 @@ export default function Clientes() {
       rut: c.rut,
       telefono: c.telefono || "",
       direccion: c.direccion || "",
-      ciudad: c.ciudad || "",
-      correo: c.correo,
+      // Cambiado: rellenamos 'comuna' en vez de 'ciudad'
+      comuna: c.comuna || "",
+      email: c.email,
       password: ""
     });
     setEditId(c.id);
@@ -249,8 +252,8 @@ export default function Clientes() {
           <div className="form-group">
             <label>Comuna</label>
             <select
-              name="ciudad"
-              value={form.ciudad}
+              name="comuna"
+              value={form.comuna}
               onChange={handleChange}
               disabled={loading}
             >
@@ -265,10 +268,10 @@ export default function Clientes() {
           <div className="form-group">
             <label>Email*</label>
             <input
-              name="correo"
+              name="email"
               type="email"
               required
-              value={form.correo}
+              value={form.email}
               onChange={handleChange}
               disabled={loading}
             />
@@ -323,7 +326,7 @@ export default function Clientes() {
               <th>Teléfono</th>
               <th>Dirección</th>
               <th>Comuna</th>
-              <th>Correo</th>
+              <th>email</th>
               <th>Acciones</th>
             </tr>
           </thead>
@@ -335,8 +338,8 @@ export default function Clientes() {
                   <td>{c.rut}</td>
                   <td>{c.telefono || "-"}</td>
                   <td>{c.direccion || "-"}</td>
-                  <td>{c.ciudad || "-"}</td>
-                  <td>{c.correo}</td>
+                  <td>{c.comuna || "-"}</td>
+                  <td>{c.email}</td>
                   <td>
                     <button
                       className="btn-editar"
