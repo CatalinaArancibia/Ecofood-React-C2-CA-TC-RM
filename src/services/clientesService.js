@@ -1,72 +1,75 @@
+// src/services/clientesService.js
+
 import { db } from "./firebase";
 import {
-  collection, getDocs, setDoc, updateDoc, deleteDoc,
-  doc, query, where, getDoc, serverTimestamp
+  collection,
+  query,
+  where,
+  getDocs,
+  setDoc,
+  updateDoc,
+  deleteDoc,
+  doc
 } from "firebase/firestore";
 
-/* referencia a la colección de todos los usuarios */
 const usuariosCol = collection(db, "usuarios");
 
-/* ─────────────────────── Lectura ─────────────────────── */
-export const getClientes = async () => {
-  const q = query(usuariosCol, where("tipo", "==", "cliente"));
+/* ---------- helpers ---------- */
+const existeDuplicado = async (campo, valor, excludeId = null) => {
+  if (!valor) return false;
+  const q = query(usuariosCol, where(campo, "==", valor));
   const snap = await getDocs(q);
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  return snap.docs.some(d => (excludeId ? d.id !== excludeId : true));
 };
 
-export const getClienteById = async (id) => {
-  const ref = doc(db, "usuarios", id);
-  const snap = await getDoc(ref);
-  if (!snap.exists()) throw new Error("Cliente no encontrado");
-  return { id: snap.id, ...snap.data() };
-};
-
-/* ─────────── helper: e-mail único ─────────── */
-const emailYaExiste = async (email, excluirId = null) => {
-  if (!email) return false;
-  let q = query(
-    usuariosCol,
-    where("tipo", "==", "cliente"),
-    where("correo", "==", email)
-  );
-  if (excluirId) q = query(q, where("__name__", "!=", excluirId));
-  const snap = await getDocs(q);
-  return !snap.empty;
-};
-
-/* ─────────────────────── Crear ─────────────────────── */
-/**
- * @param {string} uid   UID del usuario creado en Firebase Auth
- * @param {object} data  Datos del cliente (nombre, rut, etc.)
- */
-export const addCliente = async (uid, data) => {
-  if (await emailYaExiste(data.correo)) {
+/* ---------- validación previa (crear) ---------- */
+export const verificarDuplicadosCliente = async ({ rut, correo, telefono }) => {
+  if (await existeDuplicado("rut", rut))
+    throw new Error("El RUT ya está registrado");
+  if (await existeDuplicado("correo", correo))
     throw new Error("El correo ya está registrado");
-  }
+  if (await existeDuplicado("telefono", telefono))
+    throw new Error("El teléfono ya está registrado");
+};
 
+/* ---------- validación previa (editar) ---------- */
+export const verificarDuplicadosClienteEdicion = async (id, { rut, correo, telefono }) => {
+  if (await existeDuplicado("rut", rut, id))
+    throw new Error("El RUT ya está registrado");
+  if (await existeDuplicado("correo", correo, id))
+    throw new Error("El correo ya está registrado");
+  if (await existeDuplicado("telefono", telefono, id))
+    throw new Error("El teléfono ya está registrado");
+};
+
+/* ---------- CRUD ---------- */
+export const addCliente = async (uid, data) => {
   await setDoc(doc(db, "usuarios", uid), {
     ...data,
+    uid,
     tipo: "cliente",
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp()
+    createdAt: new Date()
   });
   return uid;
 };
 
-/* ─────────────────────── Actualizar ─────────────────────── */
 export const updateCliente = async (id, data) => {
-  if (data.correo && await emailYaExiste(data.correo, id)) {
-    throw new Error("El correo ya está registrado en otro cliente");
-  }
-
+  await verificarDuplicadosClienteEdicion(id, data);
   await updateDoc(doc(db, "usuarios", id), {
     ...data,
-    updatedAt: serverTimestamp()
+    updatedAt: new Date()
   });
   return id;
 };
 
-/* ─────────────────────── Eliminar ─────────────────────── */
 export const deleteCliente = async (id) => {
+  // Hard delete: borra el documento de Firestore
   await deleteDoc(doc(db, "usuarios", id));
+};
+
+/* ---------- lecturas ---------- */
+export const getClientes = async () => {
+  const q = query(usuariosCol, where("tipo", "==", "cliente"));
+  const snap = await getDocs(q);
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
 };
