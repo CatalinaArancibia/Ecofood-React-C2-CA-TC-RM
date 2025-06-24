@@ -7,11 +7,12 @@
 import React, { useEffect, useState } from "react";
 import {
   getAdmins,
-  addAdmin,            // <── (uid, datos)
+  addAdmin,                 // (uid, datos)
   updateAdmin,
   deleteAdmin,
   getNonAdminUsers,
-  promoteUserToAdmin
+  promoteUserToAdmin,
+  validateUniqueFields      // 🆕 comprobación global
 } from "../../services/adminFirebase";
 
 import { doc, getDoc } from "firebase/firestore";
@@ -41,14 +42,8 @@ export default function Administradores() {
   const [comunas, setComunas] = useState([]);
 
   const [form, setForm] = useState({
-    nombre: "",
-    rut: "",
-    telefono: "",
-    direccion: "",
-    ciudad: "",
-    correo: "",
-    password: "",        // solo al crear
-    tipoAdmin: "secundario"
+    nombre: "", rut: "", telefono: "", direccion: "",
+    ciudad: "", correo: "", password: "", tipoAdmin: "secundario"
   });
   const [editId, setEditId] = useState(null);
 
@@ -96,14 +91,8 @@ export default function Administradores() {
 
   const resetForm = () => {
     setForm({
-      nombre: "",
-      rut: "",
-      telefono: "",
-      direccion: "",
-      ciudad: "",
-      correo: "",
-      password: "",
-      tipoAdmin: "secundario"
+      nombre: "", rut: "", telefono: "", direccion: "",
+      ciudad: "", correo: "", password: "", tipoAdmin: "secundario"
     });
     setEditId(null);
   };
@@ -144,7 +133,10 @@ export default function Administradores() {
         setSuccess("Administrador actualizado");
       } else {
         /* ----------- creación ----------- */
-        /* ① Auth en app secundaria */
+        /* 🆕 1· validar duplicados ANTES de crear el usuario Auth */
+        await validateUniqueFields(datos);
+
+        /* 2· crear Auth en app secundaria */
         const secApp = initializeApp(firebaseConfig, "secondary");
         const secAuth = getAuth(secApp);
 
@@ -153,10 +145,10 @@ export default function Administradores() {
         );
         await sendEmailVerification(cred.user);
 
-        /* ② guardar documento con el MISMO uid */
-        await addAdmin(cred.user.uid, datos);   //  ← AQUÍ
+        /* 3· guardar documento con el mismo uid */
+        await addAdmin(cred.user.uid, datos);
 
-        /* ③ cerrar sesión secundaria */
+        /* 4· limpiar app secundaria */
         await signOut(secAuth);
         await deleteApp(secApp);
 
@@ -231,7 +223,8 @@ export default function Administradores() {
 
   /* ---------------- filtros ---------------- */
   const adminsFiltrados = admins.filter(
-    a => a.nombre?.toLowerCase().includes(busqueda.toLowerCase()) ||
+    a =>
+      a.nombre?.toLowerCase().includes(busqueda.toLowerCase()) ||
       a.rut?.toLowerCase().includes(busqueda.toLowerCase())
   );
 
@@ -272,7 +265,10 @@ export default function Administradores() {
               <div className="users-table-container">
                 <table className="users-table">
                   <thead>
-                    <tr><th>Nombre</th><th>RUT</th><th>Correo</th><th>Teléfono</th><th>Acciones</th></tr>
+                    <tr>
+                      <th>Nombre</th><th>RUT</th><th>Correo</th>
+                      <th>Teléfono</th><th>Acciones</th>
+                    </tr>
                   </thead>
                   <tbody>
                     {nonAdminUsers.map(u => (
@@ -307,39 +303,51 @@ export default function Administradores() {
         <div className="form-row">
           <div className="form-group">
             <label>Nombre completo*</label>
-            <input name="nombre" value={form.nombre} onChange={handleChange}
-              required minLength={3} maxLength={50} disabled={loading} />
+            <input
+              name="nombre" value={form.nombre} onChange={handleChange}
+              required minLength={3} maxLength={50} disabled={loading}
+            />
           </div>
           <div className="form-group">
             <label>RUT* (12345678-9)</label>
-            <input name="rut" value={form.rut} onChange={handleChange}
-              pattern="\d{7,8}-[0-9kK]{1}" required disabled={loading} />
+            <input
+              name="rut" value={form.rut} onChange={handleChange}
+              pattern="\d{7,8}-[0-9kK]{1}" required disabled={loading}
+            />
           </div>
         </div>
 
         <div className="form-row">
           <div className="form-group">
             <label>Teléfono</label>
-            <input name="telefono" value={form.telefono} onChange={handleChange}
-              maxLength={15} disabled={loading} />
+            <input
+              name="telefono" value={form.telefono} onChange={handleChange}
+              maxLength={15} disabled={loading}
+            />
           </div>
           <div className="form-group">
             <label>Correo electrónico*</label>
-            <input name="correo" type="email" value={form.correo}
-              onChange={handleChange} required disabled={loading} />
+            <input
+              name="correo" type="email" required
+              value={form.correo} onChange={handleChange} disabled={loading}
+            />
           </div>
         </div>
 
         <div className="form-row">
           <div className="form-group">
             <label>Dirección</label>
-            <input name="direccion" value={form.direccion}
-              onChange={handleChange} maxLength={100} disabled={loading} />
+            <input
+              name="direccion" value={form.direccion}
+              onChange={handleChange} maxLength={100} disabled={loading}
+            />
           </div>
           <div className="form-group">
             <label>Comuna</label>
-            <select name="ciudad" value={form.ciudad}
-              onChange={handleChange} disabled={loading}>
+            <select
+              name="ciudad" value={form.ciudad}
+              onChange={handleChange} disabled={loading}
+            >
               <option value="">-- Seleccione comuna --</option>
               {comunas.map((c, i) => <option key={i} value={c}>{c}</option>)}
             </select>
@@ -348,9 +356,11 @@ export default function Administradores() {
 
         <div className="form-group">
           <label>Tipo de Administrador</label>
-          <select name="tipoAdmin" value={form.tipoAdmin}
+          <select
+            name="tipoAdmin" value={form.tipoAdmin}
             onChange={handleChange}
-            disabled={loading || (editId && form.tipoAdmin === "principal")}>
+            disabled={loading || (editId && form.tipoAdmin === "principal")}
+          >
             <option value="secundario">Secundario</option>
             <option value="principal">Principal</option>
           </select>
@@ -359,8 +369,11 @@ export default function Administradores() {
         {!editId && (
           <div className="form-group">
             <label>Contraseña inicial*</label>
-            <input name="password" type="password" required minLength={6}
-              value={form.password} onChange={handleChange} disabled={loading} />
+            <input
+              name="password" type="password" required minLength={6}
+              value={form.password} onChange={handleChange}
+              disabled={loading}
+            />
           </div>
         )}
 
@@ -386,24 +399,31 @@ export default function Administradores() {
 
             <div className="form-group">
               <label>RUT *</label>
-              <input value={promoteForm.rut}
-                onChange={e => setPromoteForm({ ...promoteForm, rut: e.target.value })}
-                placeholder="12345678-9" minLength={9} maxLength={12} required />
+              <input
+                value={promoteForm.rut}
+                onChange={e =>
+                  setPromoteForm({ ...promoteForm, rut: e.target.value })
+                }
+                placeholder="12345678-9" minLength={9} maxLength={12} required
+              />
             </div>
 
             <div className="form-group">
               <label>Teléfono</label>
-              <input value={promoteForm.telefono}
-                onChange={e => setPromoteForm({ ...promoteForm, telefono: e.target.value })}
-                placeholder="+56912345678" maxLength={15} />
+              <input
+                value={promoteForm.telefono}
+                onChange={e =>
+                  setPromoteForm({ ...promoteForm, telefono: e.target.value })
+                }
+                placeholder="+56912345678" maxLength={15}
+              />
             </div>
 
             <div className="modal-actions">
-              <button className="btn-cancel" onClick={() => setShowPromoteModal(false)}>
-                Cancelar
-              </button>
-              <button className="btn-submit" onClick={handlePromoteSubmit}
-                disabled={promoteLoading}>
+              <button className="btn-cancel"
+                onClick={() => setShowPromoteModal(false)}>Cancelar</button>
+              <button className="btn-submit"
+                onClick={handlePromoteSubmit} disabled={promoteLoading}>
                 {promoteLoading ? "Procesando…" : "Confirmar"}
               </button>
             </div>
@@ -420,39 +440,47 @@ export default function Administradores() {
         ) : (
           <table className="admins-table">
             <thead>
-              <tr><th>Nombre</th><th>RUT</th><th>Teléfono</th>
-                <th>Correo</th><th>Tipo</th><th>Acciones</th></tr>
+              <tr>
+                <th>Nombre</th><th>RUT</th><th>Teléfono</th>
+                <th>Correo</th><th>Tipo</th><th>Acciones</th>
+              </tr>
             </thead>
             <tbody>
               {adminsFiltrados.length === 0 ? (
-                <tr><td colSpan="6" className="no-results">
-                  {busqueda ? "No hay coincidencias" : "No hay administradores registrados"}
-                </td></tr>
-              ) : adminsFiltrados.map(a => (
-                <tr key={a.id}>
-                  <td>{a.nombre}</td>
-                  <td>{a.rut || "-"}</td>
-                  <td>{a.telefono || "-"}</td>
-                  <td>{a.correo || "-"}</td>
-                  <td>
-                    <span className={`badge ${a.tipoAdmin === "principal" ? "primary" : "secondary"}`}>
-                      {a.tipoAdmin === "principal" ? "Principal" : "Secundario"}
-                    </span>
-                  </td>
-                  <td className="actions-cell">
-                    <button className="btn-editar"
-                      onClick={() => handleEdit(a)}
-                      disabled={a.tipoAdmin === "principal" && a.id !== currentUser?.uid}>
-                      Editar
-                    </button>
-                    <button className="btn-cancel"
-                      onClick={() => handleDelete(a.id)}
-                      disabled={a.tipoAdmin === "principal" || a.id === currentUser?.uid}>
-                      Eliminar
-                    </button>
+                <tr>
+                  <td colSpan="6" className="no-results">
+                    {busqueda
+                      ? "No hay coincidencias"
+                      : "No hay administradores registrados"}
                   </td>
                 </tr>
-              ))}
+              ) : (
+                adminsFiltrados.map(a => (
+                  <tr key={a.id}>
+                    <td>{a.nombre}</td>
+                    <td>{a.rut || "-"}</td>
+                    <td>{a.telefono || "-"}</td>
+                    <td>{a.correo || "-"}</td>
+                    <td>
+                      <span className={`badge ${a.tipoAdmin === "principal" ? "primary" : "secondary"}`}>
+                        {a.tipoAdmin === "principal" ? "Principal" : "Secundario"}
+                      </span>
+                    </td>
+                    <td className="actions-cell">
+                      <button className="btn-editar"
+                        onClick={() => handleEdit(a)}
+                        disabled={a.tipoAdmin === "principal" && a.id !== currentUser?.uid}>
+                        Editar
+                      </button>
+                      <button className="btn-cancel"
+                        onClick={() => handleDelete(a.id)}
+                        disabled={a.tipoAdmin === "principal" || a.id === currentUser?.uid}>
+                        Eliminar
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         )}
