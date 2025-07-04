@@ -1,5 +1,8 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 
+
+import Product from "../pages/Product";
+import Comments from "../pages/Comments";
 import Login from "../pages/Login";
 import Register from "../pages/Register";
 import Home from "../pages/Home";
@@ -34,21 +37,16 @@ export default function AppRouter() {
   return (
     <Routes>
       {/* Redirección base */}
-      <Route path="/" element={<Navigate to="/login" />} />
+      <Route path="/" element={<Navigate to="/Home" />} />
 
       {/* Públicas */}
+      <Route path="/Product" element={<Product />} />
+      <Route path="/Comments" element={<Comments />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
 
       {/* Página pública protegida para cualquier rol */}
-      <Route
-        path="/home"
-        element={
-          <ProtectedRoute>
-            <Home />
-          </ProtectedRoute>
-        }
-      />
+      <Route path="/home" element={<Home />} />
 
       {/* ADMIN */}
       <Route

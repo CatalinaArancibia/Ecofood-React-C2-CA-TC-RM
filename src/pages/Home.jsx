@@ -93,7 +93,7 @@ export default function Home() {
                     {datos.tipo && (
                       <button
                         onClick={irAlPanel}
-                        className="btn cerrar-sesion-btn ms-2"
+                        className="btn cerrar-sesion-btn "
                       >
                         Ir al Panel
                       </button>
@@ -105,6 +105,22 @@ export default function Home() {
                   </>
                 )}
               </div>
+              {!user && (
+                <div className="d-flex flex-lg-row flex-column align-items-lg-center align-items-end gap-2 mt-2 mt-lg-0">
+                  <button
+                    className="btn cerrar-sesion-btn"
+                    onClick={() => navigate("/login")}
+                  >
+                    Iniciar Sesión
+                  </button>
+                  <button
+                    className="btn cerrar-sesion-btn"
+                    onClick={() => navigate("/register")}
+                  >
+                    Registrarse
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </nav>
@@ -152,7 +168,7 @@ export default function Home() {
                 </a>
               </li>
               <li className="nav-item">
-                <a className="nav-link" href="/productos">
+                <a className="nav-link" href="/product">
                   Productos
                 </a>
               </li>
