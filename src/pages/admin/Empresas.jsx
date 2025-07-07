@@ -64,79 +64,93 @@ export default function Empresas() {
 
   /* guardar / crear */
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError(null); setSuccess(null); setLoading(true);
+  e.preventDefault();
+  setError(null);
+  setSuccess(null);
+  setLoading(true);
 
-    /* validaciones básicas (formato) */
-    if (!form.nombre || !form.rut || !form.comuna || !form.email) {
-      setError("Nombre, RUT, comuna y email son obligatorios");
-      setLoading(false);
-      return;
-    }
-    if (!editId && form.password.length < 6) {
-      setError("Contraseña ≥ 6 caracteres");
-      setLoading(false);
-      return;
-    }
-    if (!/^\d{7,8}-[\dkK]$/.test(form.rut)) {
-      setError("RUT inválido (ej. 12345678-9)");
-      setLoading(false);
-      return;
-    }
+  // Validaciones básicas
+  if (!form.nombre || !form.rut || !form.comuna || !form.email) {
+    setError("Nombre, RUT, comuna y email son obligatorios");
+    setLoading(false);
+    return;
+  }
 
-    /* datos que SÍ se guardan */
-    const datosEmpresa = {
-      nombre: form.nombre,
-      rut: form.rut,
-      comuna: form.comuna,
-      direccion: form.direccion,
-      telefono: form.telefono,
-      email: form.email,
-      tipo: "empresa",
-      ubicacion: `${form.comuna}, ${form.direccion}`
-    };
+  if (!editId && form.password.length < 6) {
+    setError("Contraseña ≥ 6 caracteres");
+    setLoading(false);
+    return;
+  }
 
-    try {
-      if (editId) {
-        /* actualización */
-        await updateEmpresa(editId, datosEmpresa);
-        setSuccess("Empresa actualizada");
-      } else {
-        /* ---------- CREACIÓN ---------- */
+  if (!/^\d{7,8}-[\dkK]$/.test(form.rut)) {
+    setError("RUT inválido (ej. 12345678-9)");
+    setLoading(false);
+    return;
+  }
 
-        /* ① Validar duplicados en Firestore */
-        await verificarDuplicadosEmpresa({
-          rut: form.rut,
-          email: form.email,
-          telefono: form.telefono
-        });
-
-        /* ② Crear usuario Auth en app secundaria */
-        const secApp = initializeApp(firebaseConfig, "secondary");
-        const secAuth = getAuth(secApp);
-
-        const cred = await createUserWithEmailAndPassword(
-          secAuth, form.email, form.password
-        );
-
-        /* ③ Guardar documento con el MISMO uid */
-        await addEmpresa(cred.user.uid, datosEmpresa);
-
-        /* ④ Enviar verificación y limpiar */
-        await sendEmailVerification(cred.user);
-        await signOut(secAuth);
-        await deleteApp(secApp);
-
-        setSuccess("Empresa creada. Verifique el correo electrónico.");
-      }
-
-      limpiar(); setEditId(null); cargarTodo();
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setLoading(false);
-    }
+  const datosEmpresa = {
+    nombre: form.nombre,
+    rut: form.rut,
+    comuna: form.comuna,
+    direccion: form.direccion,
+    telefono: form.telefono,
+    email: form.email,
+    tipo: "empresa",
+    ubicacion: `${form.comuna}, ${form.direccion}`
   };
+
+  try {
+    if (editId) {
+      await updateEmpresa(editId, datosEmpresa);
+      setSuccess("Empresa actualizada");
+    } else {
+      await verificarDuplicadosEmpresa({
+        rut: form.rut,
+        email: form.email,
+        telefono: form.telefono
+      });
+
+      const secApp = initializeApp(firebaseConfig, "secondary");
+      const secAuth = getAuth(secApp);
+
+      const cred = await createUserWithEmailAndPassword(
+        secAuth,
+        form.email,
+        form.password
+      );
+
+      await addEmpresa(cred.user.uid, datosEmpresa);
+      await sendEmailVerification(cred.user);
+      await signOut(secAuth);
+      await deleteApp(secApp);
+
+      setSuccess("Empresa creada. Verifique el correo electrónico.");
+    }
+
+    limpiar();
+    setEditId(null);
+    cargarTodo();
+  } catch (e) {
+    // Manejo específico de errores para el usuario
+    if (e.code === "auth/email-already-in-use") {
+      setError("El correo ya está en uso por otra empresa.");
+    } else if (e.code === "auth/invalid-email") {
+      setError("El correo ingresado no es válido.");
+    } else if (e.code === "auth/weak-password") {
+      setError("La contraseña debe tener al menos 6 caracteres.");
+    } else if (e.message?.includes("RUT ya registrado")) {
+      setError("El RUT ya está registrado.");
+    } else if (e.message?.includes("email ya registrado")) {
+      setError("El correo ya está registrado en la base de datos.");
+    } else if (e.message?.includes("telefono ya registrado")) {
+      setError("El teléfono ya está registrado.");
+    } else {
+      setError("Error: " + (e.message || "Error desconocido."));
+    }
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleEdit = (emp) => {
     setForm({

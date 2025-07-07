@@ -78,7 +78,7 @@ export default function Clientes() {
       password: ""
     });
 
-  const handleSubmit = async e => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
     setSuccess(null);
@@ -100,7 +100,6 @@ export default function Clientes() {
       return;
     }
 
-    // Cambiado: usamos 'comuna' aquí también
     const datosCliente = {
       nombre: form.nombre,
       rut: form.rut,
@@ -108,7 +107,7 @@ export default function Clientes() {
       direccion: form.direccion,
       comuna: form.comuna,
       email: form.email,
-      ubicacion: `${form.comuna}, ${form.direccion}`
+      ubicacion: `${form.comuna}, ${form.direccion}`,
     };
 
     try {
@@ -119,7 +118,7 @@ export default function Clientes() {
         await verificarDuplicadosCliente({
           rut: form.rut,
           email: form.email,
-          telefono: form.telefono
+          telefono: form.telefono,
         });
 
         const secApp = initializeApp(firebaseConfig, "secondary");
@@ -143,7 +142,17 @@ export default function Clientes() {
       setEditId(null);
       cargar();
     } catch (err) {
-      setError(err.message);
+      if (err.code === "auth/email-already-in-use") {
+        setError("El correo ya está en uso por otro usuario.");
+      } else if (err.code === "auth/invalid-email") {
+        setError("El correo ingresado no es válido.");
+      } else if (err.code === "auth/weak-password") {
+        setError("La contraseña es demasiado débil.");
+      } else if (err.code === "auth/network-request-failed") {
+        setError("Error de red. Verifique su conexión a internet.");
+      } else {
+        setError(err.message);
+      }
     } finally {
       setLoading(false);
     }

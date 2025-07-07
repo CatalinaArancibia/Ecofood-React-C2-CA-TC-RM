@@ -62,6 +62,12 @@ export default function Administradores() {
     cargarUsuariosNoAdmin();
   }, []);
 
+  useEffect(() => {
+    if (error) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [error]);
+
   const cargarAdmins = async () => {
     setLoading(true);
     try {
@@ -107,7 +113,7 @@ export default function Administradores() {
     setEditId(null);
   };
 
-  const handleSubmit = async e => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
     setSuccess(null);
@@ -118,11 +124,13 @@ export default function Administradores() {
       setLoading(false);
       return;
     }
+
     if (!editId && form.password.length < 6) {
       setError("Contraseña ≥ 6 caracteres");
       setLoading(false);
       return;
     }
+
     if (!/^\d{7,8}-[0-9kK]{1}$/.test(form.rut)) {
       setError("RUT inválido");
       setLoading(false);
@@ -136,7 +144,7 @@ export default function Administradores() {
       direccion: form.direccion,
       comuna: form.comuna,
       email: form.email,
-      tipoAdmin: form.tipoAdmin
+      tipoAdmin: form.tipoAdmin,
     };
 
     try {
@@ -168,7 +176,22 @@ export default function Administradores() {
       cargarAdmins();
       cargarUsuariosNoAdmin();
     } catch (err) {
-      setError(err.message);
+      // Mostrar errores específicos al cliente
+      if (err.code === "auth/email-already-in-use") {
+        setError("El correo ya está en uso por otro usuario.");
+      } else if (err.code === "auth/invalid-email") {
+        setError("El correo ingresado no es válido.");
+      } else if (err.code === "auth/weak-password") {
+        setError("La contraseña debe tener al menos 6 caracteres.");
+      } else if (err.message?.includes("RUT ya registrado")) {
+        setError("El RUT ya está en uso por otro administrador.");
+      } else if (err.message?.includes("email ya registrado")) {
+        setError("El correo ya está registrado.");
+      } else if (err.message?.includes("telefono ya registrado")) {
+        setError("El teléfono ya está registrado.");
+      } else {
+        setError("Error: " + (err.message || "Error desconocido."));
+      }
     } finally {
       setLoading(false);
     }
